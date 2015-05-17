@@ -1,0 +1,29 @@
+{
+  "name": "bakeIn",
+  "version": "0.0.1",
+  "description": "A helper function, specifically designed to extend controllers/models objects via mixins in sails.js when using coffeescript",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test/*.spec.coffee"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Zaggen/bakeIn.git"
+  },
+  "keywords": [
+    "mixin"
+  ],
+  "author": "Zaggen <xpynesoul@gmail.com> (https://github.com/Zaggen)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Zaggen/bakeIn/issues"
+  },
+  "homepage": "https://github.com/Zaggen/bakeIn",
+  "dependencies": {
+    "lodash": "^3.8.0"
+  },
+  "devDependencies": {
+    "chai": "^2.3.0",
+    "mocha": "^2.2.5"
+  }
+}
