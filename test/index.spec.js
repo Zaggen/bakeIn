@@ -108,7 +108,7 @@
       it('should be able to only include the specified attributes from a baked baseObject, when an attr list [] is provided', function() {
         var bakedObj;
         bakedObj = bakeIn(baseObj1, ['sum'], receivingObj);
-        expect(bakedObj.sugitm).to.exist;
+        expect(bakedObj.sum).to.exist;
         return expect(bakedObj.multiply).to.not.exist;
       });
       it('should be able to exclude an attribute from a baked baseObject, when an ["!", "attr1", "attr2"]', function() {
