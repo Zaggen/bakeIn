@@ -7,13 +7,13 @@ bakeIn = (args...)->
   receivingObj = args.pop()
   receivingObj._super = {}
   receivingObjAttrs = _.sortBy( _.keys(receivingObj) )
-  filterArgs.call(this, args)
+  _filterArgs.call(this, args)
   context = receivingObj
 
   _.each @baseObjs, (baseObj, i)->
-    filter.set(@options[i])
+    _filter.set(@options[i])
     for own key, attr of baseObj
-      unless filter.skip(key)
+      unless _filter.skip(key)
         if _.isFunction(attr)
           fn = attr
           if _.indexOf(receivingObjAttrs, key, true) is -1
@@ -35,33 +35,50 @@ bakeIn = (args...)->
   return receivingObj
 
 # Filters from the arguments the base objects and the option filter objects
-filterArgs = (args)->
+_filterArgs = (args)->
   @baseObjs = []
   @options = []
-  _.each args, (obj)->
-    if not _.isObject(obj)
-      throw new Error 'BakeIn only accepts objects (As bakeIn objs and options objs)'
-    else if isOptionObj(obj)
-      @options.push(obj)
+  _.each args, (arg)->
+    if not _.isObject(arg)
+      throw new Error 'BakeIn only accepts objects/arrays (As bakeIn {} and options [])'
+    else if _isOptionArr(arg)
+      @options.push(_makeOptionsObj(arg))
     else
-      @baseObjs.push(obj)
+      @baseObjs.push(arg)
 
 
-isOptionObj = (obj)->
-  _.some ['include', 'includeAll', 'exclude'], (optName)->
-    if obj.hasOwnProperty(optName)
+_isOptionArr = (arg)->
+  if _.isArray arg
+    isStringsArray =  _.every( arg, (item)-> if _.isString item then true else false )
+    if isStringsArray
       return true
     else
-      return false
+      throw new Error 'Array contains illegal types: The config [] should only contain strings i.e: (attr names or filter symbols (! or *) )'
+  else
+    return false
 
-checkForBalance = (baseObjs, options)->
+_makeOptionsObj = (attrNames)->
+  filterKey = attrNames[0]
+  switch filterKey
+    when '!'
+      if attrNames[1]?
+        attrNames.shift()
+        return {'exclude': attrNames}
+      else
+        return {'excludeAll': true}
+    when '*'
+      return {'includeAll': true}
+    else
+      return {'include': attrNames}
+
+_checkForBalance = (baseObjs, options)->
   if options.length > 0 and baseObjs.length isnt options.length
     throw new Error 'Invalid number of conf-options: If you provide a conf obj, you must provide one for each baseObj'
   return true
 
 # Helper obj to let us know if we should skip, based on
 # the bakeIn filter provided and the current key
-filter =
+_filter =
   set: (conf)->
     if conf?
       @mode = _.keys(conf)[0]
@@ -69,6 +86,9 @@ filter =
       # If an string was provided instead of an array (intentionally or unintentionally) we convert it to an array
       if _.isString(@attrFilters)
         @attrFilters = @attrFilters.split(',')
+    else
+      @mode = false
+
 
   skip: (key)->
     # When a certain condition is met, will return true or false, so the caller can
@@ -103,6 +123,10 @@ filter =
       when 'includeAll'
         # We never skip
         return false
+
+      when 'excludeAll'
+        # We always skip - Useful to quickly disable inheritance in dev env
+        return true
       else
         # When no options provided is the same as include all, so we never skip
         return false
