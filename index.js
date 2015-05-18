@@ -21,7 +21,6 @@
         if (!hasProp.call(baseObj, k)) continue;
         attr = baseObj[k];
         if (!filter.skip(k)) {
-          console.log("Not skipped for attr " + k);
           if (_.isFunction(attr)) {
             fn = attr;
             results.push(receivingObj[k] = _.bind(fn, context));
@@ -29,7 +28,6 @@
             if (_.indexOf(receivingObjAttrs, k, true) === -1) {
               results.push(receivingObj[k] = _.cloneDeep(attr));
             } else if (_.isArray(attr)) {
-              console.log('attr ' + attr + ' is an array');
               results.push(receivingObj[k] = receivingObj[k].concat(attr));
             } else if (_.isObject(attr)) {
               results.push(receivingObj[k] = _.merge(receivingObj[k], attr));
@@ -38,7 +36,7 @@
             }
           }
         } else {
-          results.push(console.log("skipped for attr " + k));
+          results.push(void 0);
         }
       }
       return results;
@@ -80,14 +78,11 @@
   filter = {
     set: function(conf) {
       if (conf != null) {
-        console.log("conf", conf);
         this.mode = _.keys(conf)[0];
         this.attrFilters = conf[this.mode];
-        if (!_.isArray(this.attrFilters)) {
-          this.attrFilters = this.attrFilters.split(',');
+        if (_.isString(this.attrFilters)) {
+          return this.attrFilters = this.attrFilters.split(',');
         }
-        console.log("@mode", this.mode);
-        return console.log("@attrFilters", this.attrFilters);
       }
     },
     skip: function(key) {
@@ -106,12 +101,10 @@
           }
           break;
         case 'exclude':
-          console.log('exlude filter');
           if (this.attrFilters.length === 0) {
             return false;
           }
           keyIndex = _.indexOf(this.attrFilters, key);
-          console.log("keyIndex: " + keyIndex);
           if (keyIndex >= 0) {
             _.pullAt(this.attrFilters, keyIndex);
             return true;

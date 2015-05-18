@@ -1,5 +1,8 @@
 _= require('lodash')
 
+# Takes 0 or more objects to extend/enhance a target object with their attributes, pretty much a mixer pattern.
+# When the attribute to be inherited is a method, we just bind it to our target object, so it works as the prototypal
+# inheritance (flyweight) by having the actual functions in the baseObjects, and just referencing them in the target.
 bakeIn = (args...)->
   receivingObj = args.pop()
   receivingObjAttrs = _.sortBy( _.keys(receivingObj) )
@@ -9,13 +12,7 @@ bakeIn = (args...)->
   _.each @baseObjs, (baseObj, i)->
     filter.set(@options[i])
     for own k, attr of baseObj
-      # If include is used, we check if the currently looped key matches one of the items in
-      # the object, if it does, we remove that item from the config, and we check if that key is
-      # supposed to be included or excluded, if included, we move forward, if excluded we skip,
-      # when there are no more items to include we exit the loop, but when there are no items to
-      # exlude we stop checking and keep on.
       unless filter.skip(k)
-        console.log "Not skipped for attr #{k}"
         if _.isFunction(attr)
           fn = attr
           receivingObj[k] = _.bind(fn, context)
@@ -25,15 +22,13 @@ bakeIn = (args...)->
           if _.indexOf(receivingObjAttrs, k, true) is -1
             receivingObj[k] = _.cloneDeep(attr)
           else if _.isArray(attr)
-            console.log 'attr ' + attr + ' is an array'
             receivingObj[k] = receivingObj[k].concat(attr)
           else if _.isObject(attr)
             receivingObj[k] = _.merge(receivingObj[k], attr)
-      else
-        console.log "skipped for attr #{k}"
 
   return receivingObj
 
+# Filters from the arguments the base objects and the option filter objects
 filterArgs = (args)->
   @baseObjs = []
   @options = []
@@ -58,16 +53,16 @@ checkForBalance = (baseObjs, options)->
     throw new Error 'Invalid number of conf-options: If you provide a conf obj, you must provide one for each baseObj'
   return true
 
+# Helper obj to let us know if we should skip, based on
+# the bakeIn filter provided and the current key
 filter =
   set: (conf)->
     if conf?
-      console.log "conf", conf
       @mode = _.keys(conf)[0]
       @attrFilters = conf[@mode]
-      if not _.isArray(@attrFilters)
+      # If an string was provided instead of an array (intentionally or unintentionally) we convert it to an array
+      if _.isString(@attrFilters)
         @attrFilters = @attrFilters.split(',')
-      console.log "@mode", @mode
-      console.log "@attrFilters", @attrFilters
 
   skip: (key)->
     # When a certain condition is met, will return true or false, so the caller can
@@ -87,13 +82,11 @@ filter =
           return false
 
       when 'exclude'
-        console.log 'exlude filter'
         # When there are no items left on the excluded list, we return false to avoid skipping
         if @attrFilters.length is 0
           return false
 
         keyIndex = _.indexOf(@attrFilters, key)
-        console.log "keyIndex: #{keyIndex}"
         # If we find the key to be excluded we want to skip so we return true, and we remove it from the list
         if keyIndex >= 0
           _.pullAt(@attrFilters, keyIndex)
@@ -102,10 +95,13 @@ filter =
           return false
 
       when 'excludeAll'
+        # We always skip
         return true
       when 'includeAll'
+        # We never skip
         return false
       else
+        # When no options provided is the same as include all, so we never skip
         return false
 
 module.exports = bakeIn
