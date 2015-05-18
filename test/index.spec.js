@@ -105,29 +105,30 @@
         expect(bakedObj.overridden).to.be["true"];
         return expect(bakedObj.itemList).to.deep.equal(['item1', 'item2']);
       });
-      it('should be able to only include the specified attributes from a baked baseObject', function() {
+      it('should be able to only include the specified attributes from a baked baseObject, when an attr list [] is provided', function() {
         var bakedObj;
-        bakedObj = bakeIn(baseObj1, {
-          include: ['sum']
-        }, receivingObj);
+        bakedObj = bakeIn(baseObj1, ['sum'], receivingObj);
+        expect(bakedObj.sugitm).to.exist;
+        return expect(bakedObj.multiply).to.not.exist;
+      });
+      it('should be able to exclude an attribute from a baked baseObject, when an ["!", "attr1", "attr2"]', function() {
+        var bakedObj;
+        bakedObj = bakeIn(baseObj1, ['!', 'multiply'], receivingObj);
         expect(bakedObj.sum).to.exist;
         return expect(bakedObj.multiply).to.not.exist;
       });
-      it('should be able to exclude an attribute from a baked baseObject', function() {
+      it('should include all attributes from a baked baseObject when an ["*"] (includeAll)  option is passed', function() {
         var bakedObj;
-        bakedObj = bakeIn(baseObj1, {
-          exclude: ['multiply']
-        }, receivingObj);
-        expect(bakedObj.sum).to.exist;
-        return expect(bakedObj.multiply).to.not.exist;
-      });
-      it('should include all attributes from a baked baseObject when an includeAll option is passed', function() {
-        var bakedObj;
-        bakedObj = bakeIn(baseObj1, {
-          includeAll: true
-        }, receivingObj);
+        bakedObj = bakeIn(baseObj1, ['*'], receivingObj);
         expect(bakedObj.sum).to.exist;
         expect(bakedObj.multiply).to.exist;
+        return expect(bakedObj.increaseByOne).to.exist;
+      });
+      it('should exclude all attributes from a baked baseObject when an ["!"] (excludeAll)  option is passed', function() {
+        var bakedObj;
+        bakedObj = bakeIn(baseObj1, ['!'], receivingObj);
+        expect(bakedObj.sum).to.not.exist;
+        expect(bakedObj.multiply).to.not.exist;
         return expect(bakedObj.increaseByOne).to.exist;
       });
       return describe('When redefining a function in the receiving object', function() {
