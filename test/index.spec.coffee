@@ -70,8 +70,25 @@ describe 'BakeIn Module to extend an object, with multiple objects', ->
       expect(bakedObj.overridden).to.be.true
       expect(bakedObj.itemList).to.deep.equal(['item1','item2'])
 
-    it 'should be able to exclude a method from a baked baseObject', ->
-      bakedObj = bakeIn(baseObj1, {exclude: 'multiply'}, receivingObj)
-      expect().to.be.true
+    it 'should be able to only include the specified attributes from a baked baseObject', ->
+      bakedObj = bakeIn(baseObj1, {include: ['sum']}, receivingObj)
+      expect(bakedObj.sum).to.exist
+      expect(bakedObj.multiply).to.not.exist
+
+    it 'should be able to exclude an attribute from a baked baseObject', ->
+      bakedObj = bakeIn(baseObj1, {exclude: ['multiply']}, receivingObj)
+      expect(bakedObj.sum).to.exist
+      expect(bakedObj.multiply).to.not.exist
 
 
+    it 'should include all attributes from a baked baseObject when an includeAll option is passed', ->
+      bakedObj = bakeIn(baseObj1, {includeAll: true}, receivingObj)
+      expect(bakedObj.sum).to.exist
+      expect(bakedObj.multiply).to.exist
+      expect(bakedObj.increaseByOne).to.exist
+
+    it 'should exclude all attributes from a baked baseObject when an excludeAll option is passed', ->
+      bakedObj = bakeIn(baseObj1, {excludeAll: true}, receivingObj)
+      expect(bakedObj.sum).to.not.exist
+      expect(bakedObj.multiply).to.not.exist
+      expect(bakedObj.increaseByOne).to.exist

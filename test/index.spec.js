@@ -105,12 +105,39 @@
         expect(bakedObj.overridden).to.be["true"];
         return expect(bakedObj.itemList).to.deep.equal(['item1', 'item2']);
       });
-      return it('should be able to exclude a method from a baked baseObject', function() {
+      it('should be able to only include the specified attributes from a baked baseObject', function() {
         var bakedObj;
         bakedObj = bakeIn(baseObj1, {
-          exclude: 'multiply'
+          include: ['sum']
         }, receivingObj);
-        return expect().to.be["true"];
+        expect(bakedObj.sum).to.exist;
+        return expect(bakedObj.multiply).to.not.exist;
+      });
+      it('should be able to exclude an attribute from a baked baseObject', function() {
+        var bakedObj;
+        bakedObj = bakeIn(baseObj1, {
+          exclude: ['multiply']
+        }, receivingObj);
+        expect(bakedObj.sum).to.exist;
+        return expect(bakedObj.multiply).to.not.exist;
+      });
+      it('should include all attributes from a baked baseObject when an includeAll option is passed', function() {
+        var bakedObj;
+        bakedObj = bakeIn(baseObj1, {
+          includeAll: true
+        }, receivingObj);
+        expect(bakedObj.sum).to.exist;
+        expect(bakedObj.multiply).to.exist;
+        return expect(bakedObj.increaseByOne).to.exist;
+      });
+      return it('should exclude all attributes from a baked baseObject when an excludeAll option is passed', function() {
+        var bakedObj;
+        bakedObj = bakeIn(baseObj1, {
+          excludeAll: true
+        }, receivingObj);
+        expect(bakedObj.sum).to.not.exist;
+        expect(bakedObj.multiply).to.not.exist;
+        return expect(bakedObj.increaseByOne).to.exist;
       });
     });
   });
