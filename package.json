@@ -1,6 +1,6 @@
 {
   "name": "bake-in",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A helper function, specifically designed to extend controllers/models objects via mixins in sails.js when using coffeescript",
   "main": "index.js",
   "scripts": {
