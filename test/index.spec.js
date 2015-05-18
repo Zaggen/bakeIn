@@ -68,7 +68,7 @@
       it('should have all methods from the baked baseObjects and its original attrs', function() {
         var bakedObj;
         bakedObj = bakeIn(baseObj1, baseObj2, receivingObj);
-        return expect(bakedObj).to.have.all.keys('increaseByOne', 'sum', 'multiply', 'pow', 'enable', 'itemList');
+        return expect(bakedObj).to.have.all.keys('increaseByOne', 'sum', 'multiply', 'pow', 'enable', 'itemList', '_super');
       });
       it('should be able to call the baked methods', function() {
         var bakedObj;
@@ -121,7 +121,7 @@
         expect(bakedObj.sum).to.exist;
         return expect(bakedObj.multiply).to.not.exist;
       });
-      return it('should include all attributes from a baked baseObject when an includeAll option is passed', function() {
+      it('should include all attributes from a baked baseObject when an includeAll option is passed', function() {
         var bakedObj;
         bakedObj = bakeIn(baseObj1, {
           includeAll: true
@@ -129,6 +129,19 @@
         expect(bakedObj.sum).to.exist;
         expect(bakedObj.multiply).to.exist;
         return expect(bakedObj.increaseByOne).to.exist;
+      });
+      return describe('When redefining a function in the receiving object', function() {
+        return it('should be able to call the parent obj method via the _super obj', function() {
+          var bakedObj;
+          bakedObj = bakeIn(baseObj1, {
+            multiply: function() {
+              var numbers;
+              numbers = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+              return this._super.multiply.apply(this, numbers) * 2;
+            }
+          });
+          return expect(bakedObj.multiply(2, 2)).to.equal(8);
+        });
       });
     });
   });

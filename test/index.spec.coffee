@@ -43,7 +43,7 @@ describe 'BakeIn Module to extend an object, with multiple objects', ->
 
     it 'should have all methods from the baked baseObjects and its original attrs', ->
       bakedObj = bakeIn(baseObj1, baseObj2, receivingObj)
-      expect(bakedObj).to.have.all.keys('increaseByOne', 'sum', 'multiply', 'pow', 'enable', 'itemList')
+      expect(bakedObj).to.have.all.keys('increaseByOne', 'sum', 'multiply', 'pow', 'enable', 'itemList', '_super')
 
     it 'should be able to call the baked methods', ->
       bakedObj = bakeIn(baseObj1, baseObj2, receivingObj)
@@ -86,3 +86,11 @@ describe 'BakeIn Module to extend an object, with multiple objects', ->
       expect(bakedObj.sum).to.exist
       expect(bakedObj.multiply).to.exist
       expect(bakedObj.increaseByOne).to.exist
+
+    describe 'When redefining a function in the receiving object', ->
+      it 'should be able to call the parent obj method via the _super obj', ->
+        bakedObj = bakeIn baseObj1,
+          multiply: (numbers...)->
+            @_super.multiply.apply(this, numbers) * 2
+
+        expect(bakedObj.multiply(2, 2)).to.equal(8)
