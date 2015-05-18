@@ -5,26 +5,32 @@ _= require('lodash')
 # inheritance (flyweight) by having the actual functions in the baseObjects, and just referencing them in the target.
 bakeIn = (args...)->
   receivingObj = args.pop()
+  receivingObj._super = {}
   receivingObjAttrs = _.sortBy( _.keys(receivingObj) )
   filterArgs.call(this, args)
   context = receivingObj
 
   _.each @baseObjs, (baseObj, i)->
     filter.set(@options[i])
-    for own k, attr of baseObj
-      unless filter.skip(k)
+    for own key, attr of baseObj
+      unless filter.skip(key)
         if _.isFunction(attr)
           fn = attr
-          receivingObj[k] = _.bind(fn, context)
+          if _.indexOf(receivingObjAttrs, key, true) is -1
+            receivingObj[key] = fn
+            receivingObj._super[key] = fn
+          else
+            receivingObj._super[key] = fn
         else
           # We check if the receiving object already has an attribute with that keyName
-          # if none is found or the attr is an array/array we concat/cloneDeep it
-          if _.indexOf(receivingObjAttrs, k, true) is -1
-            receivingObj[k] = _.cloneDeep(attr)
+          # if none is found or the attr is an array/obj we concat/merge it
+          if _.indexOf(receivingObjAttrs, key, true) is -1
+            receivingObj[key] = _.cloneDeep(attr)
           else if _.isArray(attr)
-            receivingObj[k] = receivingObj[k].concat(attr)
+            receivingObj[key] = receivingObj[key].concat(attr)
           else if _.isObject(attr)
-            receivingObj[k] = _.merge(receivingObj[k], attr)
+            if key isnt '_super'
+              receivingObj[key] = _.merge(receivingObj[key], attr)
 
   return receivingObj
 

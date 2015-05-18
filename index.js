@@ -10,27 +10,37 @@
     var args, context, receivingObj, receivingObjAttrs;
     args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
     receivingObj = args.pop();
+    receivingObj._super = {};
     receivingObjAttrs = _.sortBy(_.keys(receivingObj));
     filterArgs.call(this, args);
     context = receivingObj;
     _.each(this.baseObjs, function(baseObj, i) {
-      var attr, fn, k, results;
+      var attr, fn, key, results;
       filter.set(this.options[i]);
       results = [];
-      for (k in baseObj) {
-        if (!hasProp.call(baseObj, k)) continue;
-        attr = baseObj[k];
-        if (!filter.skip(k)) {
+      for (key in baseObj) {
+        if (!hasProp.call(baseObj, key)) continue;
+        attr = baseObj[key];
+        if (!filter.skip(key)) {
           if (_.isFunction(attr)) {
             fn = attr;
-            results.push(receivingObj[k] = _.bind(fn, context));
+            if (_.indexOf(receivingObjAttrs, key, true) === -1) {
+              receivingObj[key] = fn;
+              results.push(receivingObj._super[key] = fn);
+            } else {
+              results.push(receivingObj._super[key] = fn);
+            }
           } else {
-            if (_.indexOf(receivingObjAttrs, k, true) === -1) {
-              results.push(receivingObj[k] = _.cloneDeep(attr));
+            if (_.indexOf(receivingObjAttrs, key, true) === -1) {
+              results.push(receivingObj[key] = _.cloneDeep(attr));
             } else if (_.isArray(attr)) {
-              results.push(receivingObj[k] = receivingObj[k].concat(attr));
+              results.push(receivingObj[key] = receivingObj[key].concat(attr));
             } else if (_.isObject(attr)) {
-              results.push(receivingObj[k] = _.merge(receivingObj[k], attr));
+              if (key !== '_super') {
+                results.push(receivingObj[key] = _.merge(receivingObj[key], attr));
+              } else {
+                results.push(void 0);
+              }
             } else {
               results.push(void 0);
             }
