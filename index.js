@@ -59,7 +59,7 @@
   };
 
   isOptionObj = function(obj) {
-    return _.some(['include', 'includeAll', 'exclude', 'excludeAll'], function(optName) {
+    return _.some(['include', 'includeAll', 'exclude'], function(optName) {
       if (obj.hasOwnProperty(optName)) {
         return true;
       } else {
@@ -112,8 +112,6 @@
             return false;
           }
           break;
-        case 'excludeAll':
-          return true;
         case 'includeAll':
           return false;
         default:

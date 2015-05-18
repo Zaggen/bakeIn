@@ -86,9 +86,3 @@ describe 'BakeIn Module to extend an object, with multiple objects', ->
       expect(bakedObj.sum).to.exist
       expect(bakedObj.multiply).to.exist
       expect(bakedObj.increaseByOne).to.exist
-
-    it 'should exclude all attributes from a baked baseObject when an excludeAll option is passed', ->
-      bakedObj = bakeIn(baseObj1, {excludeAll: true}, receivingObj)
-      expect(bakedObj.sum).to.not.exist
-      expect(bakedObj.multiply).to.not.exist
-      expect(bakedObj.increaseByOne).to.exist

@@ -121,22 +121,13 @@
         expect(bakedObj.sum).to.exist;
         return expect(bakedObj.multiply).to.not.exist;
       });
-      it('should include all attributes from a baked baseObject when an includeAll option is passed', function() {
+      return it('should include all attributes from a baked baseObject when an includeAll option is passed', function() {
         var bakedObj;
         bakedObj = bakeIn(baseObj1, {
           includeAll: true
         }, receivingObj);
         expect(bakedObj.sum).to.exist;
         expect(bakedObj.multiply).to.exist;
-        return expect(bakedObj.increaseByOne).to.exist;
-      });
-      return it('should exclude all attributes from a baked baseObject when an excludeAll option is passed', function() {
-        var bakedObj;
-        bakedObj = bakeIn(baseObj1, {
-          excludeAll: true
-        }, receivingObj);
-        expect(bakedObj.sum).to.not.exist;
-        expect(bakedObj.multiply).to.not.exist;
         return expect(bakedObj.increaseByOne).to.exist;
       });
     });

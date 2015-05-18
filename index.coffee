@@ -42,7 +42,7 @@ filterArgs = (args)->
 
 
 isOptionObj = (obj)->
-  _.some ['include', 'includeAll', 'exclude', 'excludeAll'], (optName)->
+  _.some ['include', 'includeAll', 'exclude'], (optName)->
     if obj.hasOwnProperty(optName)
       return true
     else
@@ -94,9 +94,6 @@ filter =
         else
           return false
 
-      when 'excludeAll'
-        # We always skip
-        return true
       when 'includeAll'
         # We never skip
         return false
