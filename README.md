@@ -1,6 +1,9 @@
 # bakeIn
 A helper function to extend an object with mixins
 
+Installation
+  npm install bake-in --save
+
 Lets take a sails.js controller as an example
 ```coffeescript
 
@@ -21,7 +24,7 @@ SecondController =
       res.json("action": "filter")
 
 # ProductController.coffee 
-bakeIn = require('bakein')
+bakeIn = require('bake-in')
 ProductController =  bakeIn BaseController, SecondController
   include: ['index', 'show'],
   includeAll: true,
@@ -31,7 +34,7 @@ ProductController =  bakeIn BaseController, SecondController
 
 
 # FooController.coffee 
-bakeIn = require('bakein')
+bakeIn = require('bake-in')
 
 # BakesIn/MixesIn all attributes from BaseController into the FooController
 FooController =  bakeIn BaseController
