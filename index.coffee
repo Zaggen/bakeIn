@@ -1,8 +1,10 @@
 _= require('lodash')
 
-# Takes 0 or more objects to extend/enhance a target object with their attributes, pretty much a mixer pattern.
-# When the attribute to be inherited is a method, we just bind it to our target object, so it works as the prototypal
-# inheritance (flyweight) by having the actual functions in the baseObjects, and just referencing them in the target.
+# Takes 0 or more objects to extend/enhance a target object with their attributes.
+# Lets you set which attributes to inherit, by passing an array for each object to inherit:
+# - You can pass lets say 3 objects, and then 3 config arrays bakeIn(obj1, obj2, obj3, ['attr1'], ['*'], ['!', 'attr2'], targetObj),
+#   or you can pass it like this bakeIn(obj1, ['attr1'], obj2, ['*'], obj3, ['attr2'], targetObj), it doesn't matter if you mix them up,
+#   but the order and quantity of conf arrays must match the order and quantity of parentObjects
 bakeIn = (args...)->
   receivingObj = args.pop()
   receivingObj._super = {}
@@ -33,6 +35,7 @@ bakeIn = (args...)->
               receivingObj[key] = _.merge(receivingObj[key], attr)
 
   return receivingObj
+
 
 # Filters from the arguments the base objects and the option filter objects
 _filterArgs = (args)->
