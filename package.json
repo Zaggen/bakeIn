@@ -1,7 +1,7 @@
 {
   "name": "bake-in",
   "version": "0.3.0",
-  "description": "A helper function, specifically designed to extend controllers/models objects via mixins in sails.js when using coffeescript",
+  "description": "A helper function, to extend objects with other objects with the ability to pick/omit attributes from them",
   "main": "index.js",
   "scripts": {
     "test": "mocha test/*.spec.coffee"
@@ -18,7 +18,7 @@
     "sails.js",
     "object composition"
   ],
-  "author": "Zaggen <xpynesoul@gmail.com> (https://github.com/Zaggen)",
+  "author": "Zaggen/Lu Roman <xpynesoul@gmail.com> (https://github.com/Zaggen)",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/Zaggen/bakeIn/issues"
