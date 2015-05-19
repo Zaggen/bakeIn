@@ -2,27 +2,37 @@ _= require('lodash')
 
 # Takes 0 or more objects to extend/enhance a target object with their attributes.
 # Lets you set which attributes to inherit, by passing an array for each object to inherit:
-# - You can pass lets say 3 objects, and then 3 config arrays bakeIn(obj1, obj2, obj3, ['attr1'], ['*'], ['!', 'attr2'], targetObj),
-#   or you can pass it like this bakeIn(obj1, ['attr1'], obj2, ['*'], obj3, ['attr2'], targetObj), it doesn't matter if you mix them up,
-#   but the order and quantity of conf arrays must match the order and quantity of parentObjects
+# - You can pass lets say 3 objects, and then 3 config arrays like this:
+#   bakeIn(obj1, obj2, obj3, ['attr1'], ['*'], ['!', 'attr2'], targetObj), or you can pass it like this:
+#   bakeIn(obj1, ['attr1'], obj2, ['*'], obj3, ['attr2'], targetObj), it doesn't matter if you mix them up,
+#   but the order and quantity of conf arrays must match the order and quantity of parentObjects.
 bakeIn = (args...)->
   receivingObj = args.pop()
   receivingObj._super = {}
   receivingObjAttrs = _.sortBy( _.keys(receivingObj) )
   _filterArgs.call(this, args)
-  context = receivingObj
 
   _.each @baseObjs, (baseObj, i)->
     _filter.set(@options[i])
     for own key, attr of baseObj
+      useParentContext = if key.charAt(0) is '~' then key = key.replace('~', '') else false
       unless _filter.skip(key)
+        console.log 'i did not skip with key ' + key
+        console.log _filter
         if _.isFunction(attr)
           fn = attr
           if _.indexOf(receivingObjAttrs, key, true) is -1
-            receivingObj[key] = fn
-            receivingObj._super[key] = fn
+            unless useParentContext
+              receivingObj[key] = fn
+              receivingObj._super[key] = fn
+            else
+              receivingObj[key] = fn.bind()
+              receivingObj._super[key] = fn.bind(baseObj)
           else
-            receivingObj._super[key] = fn
+            unless useParentContext
+              receivingObj._super[key] = fn
+            else
+              receivingObj._super[key] = fn.bind(baseObj)
         else
           # We check if the receiving object already has an attribute with that keyName
           # if none is found or the attr is an array/obj we concat/merge it
@@ -66,12 +76,14 @@ _makeOptionsObj = (attrNames)->
     when '!'
       if attrNames[1]?
         attrNames.shift()
+        _.map(attrNames, (attr)-> attr.replace('~', ''))
         return {'exclude': attrNames}
       else
         return {'excludeAll': true}
     when '*'
       return {'includeAll': true}
     else
+      _.map(attrNames, (attr)-> attr.replace('~', ''))
       return {'include': attrNames}
 
 _checkForBalance = (baseObjs, options)->
@@ -90,7 +102,8 @@ _filter =
       if _.isString(@attrFilters)
         @attrFilters = @attrFilters.split(',')
     else
-      @mode = false
+      @mode = undefined
+      @attrFilters = undefined
 
 
   skip: (key)->
