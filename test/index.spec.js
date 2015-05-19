@@ -131,6 +131,19 @@
         expect(bakedObj.multiply).to.not.exist;
         return expect(bakedObj.increaseByOne).to.exist;
       });
+      describe('When inheriting from multiple objects', function() {
+        return it('should include/inherit attributes in the opposite order they were passed to the function, so the last ones takes precedence over the first ones, when an attribute is found in more than one object', function() {
+          var bakedObj, newBakedObj;
+          bakedObj = bakeIn(baseObj1, {
+            multiply: function(x) {
+              return x;
+            }
+          }, {});
+          expect(bakedObj.multiply(5)).to.equal(5);
+          newBakedObj = bakeIn(bakedObj, baseObj1, {});
+          return expect(newBakedObj.multiply(5, 5)).to.equal(25);
+        });
+      });
       return describe('When redefining a function in the receiving object', function() {
         return it('should be able to call the parent obj method via the _super obj', function() {
           var bakedObj;

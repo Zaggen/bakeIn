@@ -93,6 +93,16 @@ describe 'BakeIn Module to extend an object, with multiple objects', ->
       expect(bakedObj.multiply).to.not.exist
       expect(bakedObj.increaseByOne).to.exist
 
+    describe 'When inheriting from multiple objects', ->
+      it 'should include/inherit attributes in the opposite order they were passed to the function, so the last ones takes
+          precedence over the first ones, when an attribute is found in more than one object', ->
+
+        # This avoids the diamond problem with multiple inheritance
+        bakedObj = bakeIn(baseObj1, {multiply: (x)-> x}, {})
+        expect(bakedObj.multiply(5)).to.equal(5)
+        newBakedObj = bakeIn(bakedObj, baseObj1, {})
+        expect(newBakedObj.multiply(5, 5)).to.equal(25)
+
     describe 'When redefining a function in the receiving object', ->
       it 'should be able to call the parent obj method via the _super obj', ->
         bakedObj = bakeIn baseObj1,
