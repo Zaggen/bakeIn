@@ -6,148 +6,165 @@ _= require('lodash')
 #   bakeIn(obj1, obj2, obj3, ['attr1'], ['*'], ['!', 'attr2'], targetObj), or you can pass it like this:
 #   bakeIn(obj1, ['attr1'], obj2, ['*'], obj3, ['attr2'], targetObj), it doesn't matter if you mix them up,
 #   but the order and quantity of conf arrays must match the order and quantity of parentObjects.
-bakeIn = (args...)->
-  receivingObj = args.pop()
-  receivingObj._super = {}
-  receivingObjAttrs = _.sortBy( _.keys(receivingObj) )
-  _filterArgs.call(this, args)
-
-  _.each @baseObjs, (baseObj, i)->
-    _filter.set(@options[i])
-    for own key, attr of baseObj
-      useParentContext = if key.charAt(0) is '~' then key = key.replace('~', '') else false
-      unless _filter.skip(key)
-        console.log 'i did not skip with key ' + key
-        console.log _filter
-        if _.isFunction(attr)
-          fn = attr
-          if _.indexOf(receivingObjAttrs, key, true) is -1
-            unless useParentContext
-              receivingObj[key] = fn
-              receivingObj._super[key] = fn
+bakeInModule =
+  bakeIn: (args...)->
+    receivingObj = args.pop()
+    receivingObj._super = {}
+    receivingObjAttrs = _.sortBy( _.keys(receivingObj) )
+    @_filterArgs(args)
+    useParentContext = false
+    _.each @baseObjs, (baseObj, i)=>
+      @_filter.set(@options[i])
+      for own key, attr of baseObj
+        console.log 'useParentContext', useParentContext
+        unless @_filter.skip(key)
+          console.log 'i did not skip with key ' + key
+  #        console.log _filter
+          if _.isFunction(attr)
+            fn = attr
+            if _.indexOf(receivingObjAttrs, key, true) is -1
+              unless useParentContext
+                receivingObj[key] = fn
+                receivingObj._super[key] = fn
+              else
+                receivingObj[key] = fn.bind()
+                receivingObj._super[key] = fn.bind(baseObj)
             else
-              receivingObj[key] = fn.bind()
-              receivingObj._super[key] = fn.bind(baseObj)
+              unless useParentContext
+                receivingObj._super[key] = fn
+              else
+                receivingObj._super[key] = fn.bind(baseObj)
           else
-            unless useParentContext
-              receivingObj._super[key] = fn
-            else
-              receivingObj._super[key] = fn.bind(baseObj)
+            # We check if the receiving object already has an attribute with that keyName
+            # if none is found or the attr is an array/obj we concat/merge it
+            if _.indexOf(receivingObjAttrs, key, true) is -1
+              receivingObj[key] = _.cloneDeep(attr)
+            else if _.isArray(attr)
+              receivingObj[key] = receivingObj[key].concat(attr)
+            else if _.isObject(attr)
+              if key isnt '_super'
+                receivingObj[key] = _.merge(receivingObj[key], attr)
         else
-          # We check if the receiving object already has an attribute with that keyName
-          # if none is found or the attr is an array/obj we concat/merge it
-          if _.indexOf(receivingObjAttrs, key, true) is -1
-            receivingObj[key] = _.cloneDeep(attr)
-          else if _.isArray(attr)
-            receivingObj[key] = receivingObj[key].concat(attr)
-          else if _.isObject(attr)
-            if key isnt '_super'
-              receivingObj[key] = _.merge(receivingObj[key], attr)
+          console.log 'i did skip with key ' + key
+
+    return receivingObj
+
+
+  # Filters from the arguments the base objects and the option filter objects
+  _filterArgs: (args)->
+    @baseObjs = []
+    @options = []
+    _.each args, (arg)=>
+      if not _.isObject(arg)
+        throw new Error 'BakeIn only accepts objects/arrays (As bakeIn {} and options [])'
+      else if @_isOptionArr(arg)
+        @options.push(@_makeOptionsObj(arg))
       else
-        console.log 'i did skip with key ' + key
-
-  return receivingObj
+        @baseObjs.push(arg)
 
 
-# Filters from the arguments the base objects and the option filter objects
-_filterArgs = (args)->
-  @baseObjs = []
-  @options = []
-  _.each args, (arg)->
-    if not _.isObject(arg)
-      throw new Error 'BakeIn only accepts objects/arrays (As bakeIn {} and options [])'
-    else if _isOptionArr(arg)
-      @options.push(_makeOptionsObj(arg))
-    else
-      @baseObjs.push(arg)
-
-
-_isOptionArr = (arg)->
-  if _.isArray arg
-    isStringsArray =  _.every( arg, (item)-> if _.isString item then true else false )
-    if isStringsArray
-      return true
-    else
-      throw new Error 'Array contains illegal types: The config [] should only contain strings i.e: (attr names or filter symbols (! or *) )'
-  else
-    return false
-
-_makeOptionsObj = (attrNames)->
-  filterKey = attrNames[0]
-  switch filterKey
-    when '!'
-      if attrNames[1]?
-        attrNames.shift()
-        _.map(attrNames, (attr)-> attr = attr.replace('~', ''))
-        return {'exclude': attrNames}
-      else
-        return {'excludeAll': true}
-    when '*'
-      return {'includeAll': true}
-    else
-      attrNames = _.map(attrNames, (attr)-> attr = attr.replace('~', ''))
-      console.log attrNames
-      return {'include': attrNames}
-
-_checkForBalance = (baseObjs, options)->
-  if options.length > 0 and baseObjs.length isnt options.length
-    throw new Error 'Invalid number of conf-options: If you provide a conf obj, you must provide one for each baseObj'
-  return true
-
-# Helper obj to let us know if we should skip, based on
-# the bakeIn filter provided and the current key
-_filter =
-  set: (conf)->
-    if conf?
-      @mode = _.keys(conf)[0]
-      @attrFilters = conf[@mode]
-      # If an string was provided instead of an array (intentionally or unintentionally) we convert it to an array
-      if _.isString(@attrFilters)
-        @attrFilters = @attrFilters.split(',')
-    else
-      @mode = undefined
-      @attrFilters = undefined
-
-
-  skip: (key)->
-    # When a certain condition is met, will return true or false, so the caller can
-    # know if it should skip or not
-    switch @mode
-      when 'include'
-        # When there are no items left on the included list, we return true to always skip
-        if @attrFilters.length is 0
-          return true
-
-        keyIndex = _.indexOf(@attrFilters, key)
-        # If we find the key to be included we don't skip so we return false, and we remove it from the list
-        if keyIndex >= 0
-          _.pullAt(@attrFilters, keyIndex)
-          return false
-        else
-          return true
-
-      when 'exclude'
-        # When there are no items left on the excluded list, we return false to avoid skipping
-        if @attrFilters.length is 0
-          return false
-
-        keyIndex = _.indexOf(@attrFilters, key)
-        # If we find the key to be excluded we want to skip so we return true, and we remove it from the list
-        if keyIndex >= 0
-          _.pullAt(@attrFilters, keyIndex)
-          return true
-        else
-          return false
-
-      when 'includeAll'
-        # We never skip
-        return false
-
-      when 'excludeAll'
-        # We always skip - Useful to quickly disable inheritance in dev env
+  _isOptionArr: (arg)->
+    if _.isArray arg
+      isStringsArray =  _.every( arg, (item)-> if _.isString item then true else false )
+      if isStringsArray
         return true
       else
-        # When no options provided is the same as include all, so we never skip
-        return false
+        throw new Error 'Array contains illegal types: The config [] should only contain strings i.e: (attr names or filter symbols (! or *) )'
+    else
+      return false
 
-module.exports = bakeIn
+  _makeOptionsObj: (attrNames)->
+    filterKey = attrNames[0]
+    @useParentContext = {}
+    switch filterKey
+      when '!'
+        if attrNames[1]?
+          attrNames.shift()
+          attrNames = @_filterParentContextFlag(attrNames, true) # We use this one here just to make sure somebody didn't call
+          return {'exclude': attrNames}
+        else
+          return {'excludeAll': true}
+      when '*'
+        return {'includeAll': true}
+      else
+        attrNames = @_filterParentContextFlag(attrNames)
+        return {'include': attrNames}
+
+  # Checks for ~ flag in each attribute name... e.g ['~methodName'], even though we check this for all
+  # attributes in the list, it will only work when including method names. It won't work with excludes,
+  # regular attributes
+  _filterParentContextFlag: (attrNames, warningOnMatch)->
+    newAttrNames = []
+    for attrName in attrNames
+      if attrName.charAt(0) is '~'
+        if warningOnMatch
+          console.warn 'The ~ should only be used when including methods, not excluding them'
+        newAttrNames.push(attrName.replace('~', ''))
+        @useParentContext[attrName] = true
+      else
+        newAttrNames.push(attrName)
+    return newAttrNames
+
+  _checkForBalance: (baseObjs, options)->
+    if options.length > 0 and baseObjs.length isnt options.length
+      throw new Error 'Invalid number of conf-options: If you provide a conf obj, you must provide one for each baseObj'
+    return true
+
+  # Helper obj to let us know if we should skip, based on
+  # the bakeIn filter provided and the current key
+  _filter:
+    set: (conf)->
+      if conf?
+        @mode = _.keys(conf)[0]
+        @attrFilters = conf[@mode]
+        # If an string was provided instead of an array (intentionally or unintentionally) we convert it to an array
+        if _.isString(@attrFilters)
+          @attrFilters = @attrFilters.split(',')
+      else
+        @mode = undefined
+        @attrFilters = undefined
+
+
+    skip: (key)->
+      # When a certain condition is met, will return true or false, so the caller can
+      # know if it should skip or not
+      console.log '@mode', @mode
+      switch @mode
+        when 'include'
+          # When there are no items left on the included list, we return true to always skip
+          if @attrFilters.length is 0
+            return true
+
+          keyIndex = _.indexOf(@attrFilters, key)
+          # If we find the key to be included we don't skip so we return false, and we remove it from the list
+          if keyIndex >= 0
+            _.pullAt(@attrFilters, keyIndex)
+            return false
+          else
+            return true
+
+        when 'exclude'
+          # When there are no items left on the excluded list, we return false to avoid skipping
+          if @attrFilters.length is 0
+            return false
+
+          keyIndex = _.indexOf(@attrFilters, key)
+          # If we find the key to be excluded we want to skip so we return true, and we remove it from the list
+          if keyIndex >= 0
+            _.pullAt(@attrFilters, keyIndex)
+            return true
+          else
+            return false
+
+        when 'includeAll'
+          # We never skip
+          return false
+
+        when 'excludeAll'
+          # We always skip - Useful to quickly disable inheritance in dev env
+          return true
+        else
+          # When no options provided is the same as include all, so we never skip
+          return false
+
+module.exports = bakeInModule.bakeIn.bind(bakeInModule)
