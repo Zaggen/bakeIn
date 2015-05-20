@@ -2,7 +2,7 @@ expect = require('chai').expect
 bakeIn = require('../index')
 
 describe 'BakeIn Module to extend an object, with multiple objects', ->
-  [receivingObj, baseObj1, baseObj2, baseObj3, objWithAttrs] = [null, null, null, null, null]
+  [receivingObj, baseObj1, baseObj2, baseObj3, baseObj4, objWithAttrs] = [null, null, null, null, null, null]
   before ->
     baseObj1 =
       sum: (numbers...)->
@@ -25,6 +25,15 @@ describe 'BakeIn Module to extend an object, with multiple objects', ->
     baseObj3 =
       increaseByOne: (n)->
         @sum(n, 1)
+
+
+    baseObj4 =
+      _privateAttr: 5
+      publicMethod: (x)->  @_privateMethod(x)
+      _privateMethod: (x)-> x * @_privateAttr
+      _privateMethod4: (x)-> x / @_privateAttr
+      _privateMethod2: (x)-> x + @_privateAttr
+      _privateMethod3: (x)-> x - @_privateAttr
 
     objWithAttrs =
       enable: true
@@ -71,9 +80,13 @@ describe 'BakeIn Module to extend an object, with multiple objects', ->
       expect(bakedObj.itemList).to.deep.equal(['item1','item2'])
 
     it 'should be able to only include the specified attributes from a baked baseObject, when an attr list [] is provided', ->
-      bakedObj = bakeIn(baseObj1, ['sum'], receivingObj)
+      bakedObj = bakeIn(baseObj1, baseObj4, ['sum'], ['publicMethod'], receivingObj)
       expect(bakedObj.sum).to.exist
       expect(bakedObj.multiply).to.not.exist
+      expect(bakedObj._privateAttr).to.not.exist
+      expect(bakedObj._privateMethod).to.not.exist
+      expect(bakedObj._privateMethod2).to.not.exist
+      expect(bakedObj._privateMethod3).to.not.exist
 
     it 'should be able to exclude an attribute from a baked baseObject, when an ["!", "attr1", "attr2"]', ->
       bakedObj = bakeIn(baseObj1, ['!', 'multiply'], receivingObj)
@@ -92,6 +105,14 @@ describe 'BakeIn Module to extend an object, with multiple objects', ->
       expect(bakedObj.sum).to.not.exist
       expect(bakedObj.multiply).to.not.exist
       expect(bakedObj.increaseByOne).to.exist
+
+    describe 'When an attribute(Only methods) is marked with the ~ in the filter array', ->
+      it 'should bind the method context to the original obj (parent) instead of the target obj', ->
+
+        bakedObj = bakeIn(baseObj4, ['~publicMethod'], {})
+        expect(bakedObj._privateAttr).to.not.exist()
+        expect(bakedObj._privateMethod).to.not.exist()
+        expect(bakedObj.publichMethod(2)).to.equal(10)
 
     describe 'When inheriting from multiple objects', ->
       it 'should include/inherit attributes in the opposite order they were passed to the function, so the last ones takes

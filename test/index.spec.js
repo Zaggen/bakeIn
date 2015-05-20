@@ -8,8 +8,8 @@
   bakeIn = require('../index');
 
   describe('BakeIn Module to extend an object, with multiple objects', function() {
-    var baseObj1, baseObj2, baseObj3, objWithAttrs, receivingObj, ref;
-    ref = [null, null, null, null, null], receivingObj = ref[0], baseObj1 = ref[1], baseObj2 = ref[2], baseObj3 = ref[3], objWithAttrs = ref[4];
+    var baseObj1, baseObj2, baseObj3, baseObj4, objWithAttrs, receivingObj, ref;
+    ref = [null, null, null, null, null, null], receivingObj = ref[0], baseObj1 = ref[1], baseObj2 = ref[2], baseObj3 = ref[3], baseObj4 = ref[4], objWithAttrs = ref[5];
     before(function() {
       baseObj1 = {
         sum: function() {
@@ -46,6 +46,24 @@
       baseObj3 = {
         increaseByOne: function(n) {
           return this.sum(n, 1);
+        }
+      };
+      baseObj4 = {
+        _privateAttr: 5,
+        publicMethod: function(x) {
+          return this._privateMethod(x);
+        },
+        _privateMethod: function(x) {
+          return x * this._privateAttr;
+        },
+        _privateMethod4: function(x) {
+          return x / this._privateAttr;
+        },
+        _privateMethod2: function(x) {
+          return x + this._privateAttr;
+        },
+        _privateMethod3: function(x) {
+          return x - this._privateAttr;
         }
       };
       return objWithAttrs = {
@@ -107,9 +125,13 @@
       });
       it('should be able to only include the specified attributes from a baked baseObject, when an attr list [] is provided', function() {
         var bakedObj;
-        bakedObj = bakeIn(baseObj1, ['sum'], receivingObj);
+        bakedObj = bakeIn(baseObj1, baseObj4, ['sum'], ['publicMethod'], receivingObj);
         expect(bakedObj.sum).to.exist;
-        return expect(bakedObj.multiply).to.not.exist;
+        expect(bakedObj.multiply).to.not.exist;
+        expect(bakedObj._privateAttr).to.not.exist;
+        expect(bakedObj._privateMethod).to.not.exist;
+        expect(bakedObj._privateMethod2).to.not.exist;
+        return expect(bakedObj._privateMethod3).to.not.exist;
       });
       it('should be able to exclude an attribute from a baked baseObject, when an ["!", "attr1", "attr2"]', function() {
         var bakedObj;
@@ -130,6 +152,15 @@
         expect(bakedObj.sum).to.not.exist;
         expect(bakedObj.multiply).to.not.exist;
         return expect(bakedObj.increaseByOne).to.exist;
+      });
+      describe('When an attribute(Only methods) is marked with the ~ in the filter array', function() {
+        return it('should bind the method context to the original obj (parent) instead of the target obj', function() {
+          var bakedObj;
+          bakedObj = bakeIn(baseObj4, ['~publicMethod'], {});
+          expect(bakedObj._privateAttr).to.not.exist();
+          expect(bakedObj._privateMethod).to.not.exist();
+          return expect(bakedObj.publichMethod(2)).to.equal(10);
+        });
       });
       describe('When inheriting from multiple objects', function() {
         return it('should include/inherit attributes in the opposite order they were passed to the function, so the last ones takes precedence over the first ones, when an attribute is found in more than one object', function() {
