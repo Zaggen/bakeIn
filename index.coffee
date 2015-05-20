@@ -10,42 +10,28 @@ bakeInModule =
   bakeIn: (args...)->
     receivingObj = args.pop()
     receivingObj._super = {}
-    receivingObjAttrs = _.sortBy( _.keys(receivingObj) )
+    receivingObjAttrs = _.mapValues(receivingObj, (val)-> true)
     @_filterArgs(args)
-    useParentContext = false
     _.each @baseObjs, (baseObj, i)=>
       @_filter.set(@options[i])
       for own key, attr of baseObj
-        console.log 'useParentContext', useParentContext
         unless @_filter.skip(key)
-          console.log 'i did not skip with key ' + key
-  #        console.log _filter
           if _.isFunction(attr)
             fn = attr
-            if _.indexOf(receivingObjAttrs, key, true) is -1
-              unless useParentContext
-                receivingObj[key] = fn
-                receivingObj._super[key] = fn
-              else
-                receivingObj[key] = fn.bind()
-                receivingObj._super[key] = fn.bind(baseObj)
+            fn = if @useParentContext[key] then fn.bind(baseObj) else fn
+            if receivingObjAttrs[key]?
+              receivingObj._super[key] = fn
             else
-              unless useParentContext
-                receivingObj._super[key] = fn
-              else
-                receivingObj._super[key] = fn.bind(baseObj)
+              receivingObj[key] = receivingObj._super[key] = fn
           else
             # We check if the receiving object already has an attribute with that keyName
             # if none is found or the attr is an array/obj we concat/merge it
-            if _.indexOf(receivingObjAttrs, key, true) is -1
+            if not receivingObjAttrs[key]
               receivingObj[key] = _.cloneDeep(attr)
             else if _.isArray(attr)
               receivingObj[key] = receivingObj[key].concat(attr)
-            else if _.isObject(attr)
-              if key isnt '_super'
-                receivingObj[key] = _.merge(receivingObj[key], attr)
-        else
-          console.log 'i did skip with key ' + key
+            else if _.isObject(attr) and key isnt '_super'
+              receivingObj[key] = _.merge(receivingObj[key], attr)
 
     return receivingObj
 
@@ -54,6 +40,7 @@ bakeInModule =
   _filterArgs: (args)->
     @baseObjs = []
     @options = []
+    @useParentContext = {}
     _.each args, (arg)=>
       if not _.isObject(arg)
         throw new Error 'BakeIn only accepts objects/arrays (As bakeIn {} and options [])'
@@ -75,7 +62,6 @@ bakeInModule =
 
   _makeOptionsObj: (attrNames)->
     filterKey = attrNames[0]
-    @useParentContext = {}
     switch filterKey
       when '!'
         if attrNames[1]?
@@ -99,7 +85,8 @@ bakeInModule =
       if attrName.charAt(0) is '~'
         if warningOnMatch
           console.warn 'The ~ should only be used when including methods, not excluding them'
-        newAttrNames.push(attrName.replace('~', ''))
+        attrName = attrName.replace('~', '')
+        newAttrNames.push(attrName)
         @useParentContext[attrName] = true
       else
         newAttrNames.push(attrName)
@@ -128,7 +115,6 @@ bakeInModule =
     skip: (key)->
       # When a certain condition is met, will return true or false, so the caller can
       # know if it should skip or not
-      console.log '@mode', @mode
       switch @mode
         when 'include'
           # When there are no items left on the included list, we return true to always skip

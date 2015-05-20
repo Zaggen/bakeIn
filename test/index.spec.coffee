@@ -88,31 +88,34 @@ describe 'BakeIn Module to extend an object, with multiple objects', ->
       expect(bakedObj._privateMethod2).to.not.exist
       expect(bakedObj._privateMethod3).to.not.exist
 
-    it 'should be able to exclude an attribute from a baked baseObject, when an ["!", "attr1", "attr2"]', ->
+    it 'should be able to exclude an attribute from a baked baseObject, when an "!" flag is provided e.g: ["!", "attr1", "attr2"]', ->
       bakedObj = bakeIn(baseObj1, ['!', 'multiply'], receivingObj)
       expect(bakedObj.sum).to.exist
       expect(bakedObj.multiply).to.not.exist
 
 
-    it 'should include all attributes from a baked baseObject when an ["*"] (includeAll)  option is passed', ->
+    it 'should include all attributes from a baked baseObject when an ["*"] (includeAll)  flag is provided', ->
       bakedObj = bakeIn(baseObj1, ['*'], receivingObj)
       expect(bakedObj.sum).to.exist
       expect(bakedObj.multiply).to.exist
       expect(bakedObj.increaseByOne).to.exist
 
-    it 'should exclude all attributes from a baked baseObject when an ["!"] (excludeAll)  option is passed', ->
+    it 'should exclude all attributes from a baked baseObject when an ["!"] (excludeAll) flag is provided', ->
       bakedObj = bakeIn(baseObj1, ['!'], receivingObj)
       expect(bakedObj.sum).to.not.exist
       expect(bakedObj.multiply).to.not.exist
       expect(bakedObj.increaseByOne).to.exist
 
-    describe 'When an attribute(Only methods) is marked with the ~ in the filter array', ->
+    describe 'When an attribute(Only methods) is marked with the ~ flag in the filter array, e.g: ["~methodName"]', ->
       it 'should bind the method context to the original obj (parent) instead of the target obj', ->
-
         bakedObj = bakeIn(baseObj4, ['~publicMethod'], {})
-        expect(bakedObj._privateAttr).to.not.exist()
-        expect(bakedObj._privateMethod).to.not.exist()
-        expect(bakedObj.publichMethod(2)).to.equal(10)
+        expect(bakedObj._privateAttr).to.not.exist
+        expect(bakedObj._privateMethod).to.not.exist
+        expect(bakedObj.publicMethod).to.exist
+        expect(bakedObj.publicMethod(2)).to.equal(10)
+      it 'should ignore ~ when using the exclude flag', ->
+        bakedObj = bakeIn(baseObj4, ['!', '~_privateMethod'], {})
+        expect(bakedObj._privateMethod).to.not.exist
 
     describe 'When inheriting from multiple objects', ->
       it 'should include/inherit attributes in the opposite order they were passed to the function, so the last ones takes

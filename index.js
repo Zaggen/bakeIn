@@ -8,13 +8,14 @@
 
   bakeInModule = {
     bakeIn: function() {
-      var args, receivingObj, receivingObjAttrs, useParentContext;
+      var args, receivingObj, receivingObjAttrs;
       args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
       receivingObj = args.pop();
       receivingObj._super = {};
-      receivingObjAttrs = _.sortBy(_.keys(receivingObj));
+      receivingObjAttrs = _.mapValues(receivingObj, function(val) {
+        return true;
+      });
       this._filterArgs(args);
-      useParentContext = false;
       _.each(this.baseObjs, (function(_this) {
         return function(baseObj, i) {
           var attr, fn, key, results;
@@ -23,43 +24,28 @@
           for (key in baseObj) {
             if (!hasProp.call(baseObj, key)) continue;
             attr = baseObj[key];
-            console.log('useParentContext', useParentContext);
             if (!_this._filter.skip(key)) {
-              console.log('i did not skip with key ' + key);
               if (_.isFunction(attr)) {
                 fn = attr;
-                if (_.indexOf(receivingObjAttrs, key, true) === -1) {
-                  if (!useParentContext) {
-                    receivingObj[key] = fn;
-                    results.push(receivingObj._super[key] = fn);
-                  } else {
-                    receivingObj[key] = fn.bind();
-                    results.push(receivingObj._super[key] = fn.bind(baseObj));
-                  }
+                fn = _this.useParentContext[key] ? fn.bind(baseObj) : fn;
+                if (receivingObjAttrs[key] != null) {
+                  results.push(receivingObj._super[key] = fn);
                 } else {
-                  if (!useParentContext) {
-                    results.push(receivingObj._super[key] = fn);
-                  } else {
-                    results.push(receivingObj._super[key] = fn.bind(baseObj));
-                  }
+                  results.push(receivingObj[key] = receivingObj._super[key] = fn);
                 }
               } else {
-                if (_.indexOf(receivingObjAttrs, key, true) === -1) {
+                if (!receivingObjAttrs[key]) {
                   results.push(receivingObj[key] = _.cloneDeep(attr));
                 } else if (_.isArray(attr)) {
                   results.push(receivingObj[key] = receivingObj[key].concat(attr));
-                } else if (_.isObject(attr)) {
-                  if (key !== '_super') {
-                    results.push(receivingObj[key] = _.merge(receivingObj[key], attr));
-                  } else {
-                    results.push(void 0);
-                  }
+                } else if (_.isObject(attr) && key !== '_super') {
+                  results.push(receivingObj[key] = _.merge(receivingObj[key], attr));
                 } else {
                   results.push(void 0);
                 }
               }
             } else {
-              results.push(console.log('i did skip with key ' + key));
+              results.push(void 0);
             }
           }
           return results;
@@ -70,6 +56,7 @@
     _filterArgs: function(args) {
       this.baseObjs = [];
       this.options = [];
+      this.useParentContext = {};
       return _.each(args, (function(_this) {
         return function(arg) {
           if (!_.isObject(arg)) {
@@ -104,7 +91,6 @@
     _makeOptionsObj: function(attrNames) {
       var filterKey;
       filterKey = attrNames[0];
-      this.useParentContext = {};
       switch (filterKey) {
         case '!':
           if (attrNames[1] != null) {
@@ -139,7 +125,8 @@
           if (warningOnMatch) {
             console.warn('The ~ should only be used when including methods, not excluding them');
           }
-          newAttrNames.push(attrName.replace('~', ''));
+          attrName = attrName.replace('~', '');
+          newAttrNames.push(attrName);
           this.useParentContext[attrName] = true;
         } else {
           newAttrNames.push(attrName);
@@ -168,7 +155,6 @@
       },
       skip: function(key) {
         var keyIndex;
-        console.log('@mode', this.mode);
         switch (this.mode) {
           case 'include':
             if (this.attrFilters.length === 0) {
