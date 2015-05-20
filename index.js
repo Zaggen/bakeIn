@@ -7,28 +7,39 @@
   _ = require('lodash');
 
   bakeIn = function() {
-    var args, context, receivingObj, receivingObjAttrs;
+    var args, receivingObj, receivingObjAttrs;
     args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
     receivingObj = args.pop();
     receivingObj._super = {};
     receivingObjAttrs = _.sortBy(_.keys(receivingObj));
     _filterArgs.call(this, args);
-    context = receivingObj;
     _.each(this.baseObjs, function(baseObj, i) {
-      var attr, fn, key, results;
+      var attr, fn, key, results, useParentContext;
       _filter.set(this.options[i]);
       results = [];
       for (key in baseObj) {
         if (!hasProp.call(baseObj, key)) continue;
         attr = baseObj[key];
+        useParentContext = key.charAt(0) === '~' ? key = key.replace('~', '') : false;
         if (!_filter.skip(key)) {
+          console.log('i did not skip with key ' + key);
+          console.log(_filter);
           if (_.isFunction(attr)) {
             fn = attr;
             if (_.indexOf(receivingObjAttrs, key, true) === -1) {
-              receivingObj[key] = fn;
-              results.push(receivingObj._super[key] = fn);
+              if (!useParentContext) {
+                receivingObj[key] = fn;
+                results.push(receivingObj._super[key] = fn);
+              } else {
+                receivingObj[key] = fn.bind();
+                results.push(receivingObj._super[key] = fn.bind(baseObj));
+              }
             } else {
-              results.push(receivingObj._super[key] = fn);
+              if (!useParentContext) {
+                results.push(receivingObj._super[key] = fn);
+              } else {
+                results.push(receivingObj._super[key] = fn.bind(baseObj));
+              }
             }
           } else {
             if (_.indexOf(receivingObjAttrs, key, true) === -1) {
@@ -46,7 +57,7 @@
             }
           }
         } else {
-          results.push(void 0);
+          results.push(console.log('i did skip with key ' + key));
         }
       }
       return results;
@@ -95,6 +106,9 @@
       case '!':
         if (attrNames[1] != null) {
           attrNames.shift();
+          _.map(attrNames, function(attr) {
+            return attr = attr.replace('~', '');
+          });
           return {
             'exclude': attrNames
           };
@@ -109,6 +123,10 @@
           'includeAll': true
         };
       default:
+        attrNames = _.map(attrNames, function(attr) {
+          return attr = attr.replace('~', '');
+        });
+        console.log(attrNames);
         return {
           'include': attrNames
         };
@@ -131,7 +149,8 @@
           return this.attrFilters = this.attrFilters.split(',');
         }
       } else {
-        return this.mode = false;
+        this.mode = void 0;
+        return this.attrFilters = void 0;
       }
     },
     skip: function(key) {
@@ -146,7 +165,7 @@
             _.pullAt(this.attrFilters, keyIndex);
             return false;
           } else {
-            return false;
+            return true;
           }
           break;
         case 'exclude':

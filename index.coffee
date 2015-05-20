@@ -43,6 +43,8 @@ bakeIn = (args...)->
           else if _.isObject(attr)
             if key isnt '_super'
               receivingObj[key] = _.merge(receivingObj[key], attr)
+      else
+        console.log 'i did skip with key ' + key
 
   return receivingObj
 
@@ -76,14 +78,15 @@ _makeOptionsObj = (attrNames)->
     when '!'
       if attrNames[1]?
         attrNames.shift()
-        _.map(attrNames, (attr)-> attr.replace('~', ''))
+        _.map(attrNames, (attr)-> attr = attr.replace('~', ''))
         return {'exclude': attrNames}
       else
         return {'excludeAll': true}
     when '*'
       return {'includeAll': true}
     else
-      _.map(attrNames, (attr)-> attr.replace('~', ''))
+      attrNames = _.map(attrNames, (attr)-> attr = attr.replace('~', ''))
+      console.log attrNames
       return {'include': attrNames}
 
 _checkForBalance = (baseObjs, options)->
@@ -121,7 +124,7 @@ _filter =
           _.pullAt(@attrFilters, keyIndex)
           return false
         else
-          return false
+          return true
 
       when 'exclude'
         # When there are no items left on the excluded list, we return false to avoid skipping
