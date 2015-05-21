@@ -138,4 +138,4 @@ FooController =  extend BaseController
 ```
 
 ## Bugs, questions, ideas?
-### HEll, yeah, just open an issue and i'll try to answer ASAP. I'll appreciate any bug report with a propper way to reproduce it.
+Hell, yeah, just open an issue and i'll try to answer ASAP. I'll appreciate any bug report with a propper way to reproduce it.
