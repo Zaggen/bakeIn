@@ -40,7 +40,7 @@ describe 'BakeIn Module to extend an object, with multiple objects', ->
       preferences:
         fullScreen: true
 
-  describe 'The receiving object', ->
+  describe 'The baked object', ->
 
     beforeEach ->
       receivingObj =
@@ -134,3 +134,10 @@ describe 'BakeIn Module to extend an object, with multiple objects', ->
             @_super.multiply.apply(this, numbers) * 2
 
         expect(bakedObj.multiply(2, 2)).to.equal(8)
+
+    describe 'When the targetObj(Last obj argument) defines a constructor method', ->
+      it 'should be an object with a factory method called "new", that will call the defined constructor function', ->
+        bakedObj = bakeIn(baseObj1, { constructor: (@msg)-> })
+        expect(bakedObj.new).to.exist
+        bakedInstance = bakedObj.new("I'm baked")
+        expect(bakedInstance.msg).to.equal("I'm baked")

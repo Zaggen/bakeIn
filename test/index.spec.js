@@ -73,7 +73,7 @@
         }
       };
     });
-    return describe('The receiving object', function() {
+    return describe('The baked object', function() {
       beforeEach(function() {
         return receivingObj = {
           increaseByOne: function(n) {
@@ -181,7 +181,7 @@
           return expect(newBakedObj.multiply(5, 5)).to.equal(25);
         });
       });
-      return describe('When redefining a function in the receiving object', function() {
+      describe('When redefining a function in the receiving object', function() {
         return it('should be able to call the parent obj method via the _super obj', function() {
           var bakedObj;
           bakedObj = bakeIn(baseObj1, {
@@ -192,6 +192,19 @@
             }
           });
           return expect(bakedObj.multiply(2, 2)).to.equal(8);
+        });
+      });
+      return describe('When the targetObj(Last obj argument) defines a constructor method', function() {
+        return it('should be an object with a factory method called "new", that will call the defined constructor function', function() {
+          var bakedInstance, bakedObj;
+          bakedObj = bakeIn(baseObj1, {
+            constructor: function(msg) {
+              this.msg = msg;
+            }
+          });
+          expect(bakedObj["new"]).to.exist;
+          bakedInstance = bakedObj["new"]("I'm baked");
+          return expect(bakedInstance.msg).to.equal("I'm baked");
         });
       });
     });
