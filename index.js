@@ -51,7 +51,21 @@
           return results;
         };
       })(this));
+      if (receivingObj.hasOwnProperty('constructor')) {
+        receivingObj = this._makeFactoryObj(receivingObj);
+      }
       return receivingObj;
+    },
+    _makeFactoryObj: function(obj) {
+      return {
+        "new": function() {
+          var args, instance;
+          args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+          instance = Object.create(obj);
+          instance.constructor.apply(instance, args);
+          return instance;
+        }
+      };
     },
     _filterArgs: function(args) {
       this.baseObjs = [];

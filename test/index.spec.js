@@ -199,7 +199,7 @@
           var bakedInstance, bakedObj;
           bakedObj = bakeIn(baseObj1, {
             constructor: function(msg) {
-              this.msg = msg;
+              return this.msg = msg;
             }
           });
           expect(bakedObj["new"]).to.exist;

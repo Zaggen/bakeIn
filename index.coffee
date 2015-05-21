@@ -33,9 +33,17 @@ bakeInModule =
             else if _.isObject(attr) and key isnt '_super'
               receivingObj[key] = _.merge(receivingObj[key], attr)
 
+    if receivingObj.hasOwnProperty('constructor')
+      receivingObj = @_makeFactoryObj(receivingObj)
     return receivingObj
 
-
+  _makeFactoryObj: (obj)->
+    {
+      new:(args...)->
+        instance = Object.create(obj)
+        instance.constructor.apply(instance, args)
+        return instance
+    }
   # Filters from the arguments the base objects and the option filter objects
   _filterArgs: (args)->
     @baseObjs = []
