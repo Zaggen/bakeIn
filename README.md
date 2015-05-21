@@ -20,6 +20,7 @@ bakeIn([baseObjectN], [configN], receivingObj)
   - `['*']` Will include all attributes. By default if you dont't provide a confArray there is no need to explicitly say to include all attributes, but if you use at least one confArray for any of your objects, you must use them for the rest, this is to avoid ambiguity, so use the `*` in those cases.
 * `receivingObj` Object The object to extend.
 
+## Examples
 ```coffeescript
 bakeIn = require('bakeIn') # You can call it extend/compose/mixIn what ever suits you
 
