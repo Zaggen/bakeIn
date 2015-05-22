@@ -86,7 +86,7 @@
       it('should have all methods from the baked baseObjects and its original attrs', function() {
         var bakedObj;
         bakedObj = bakeIn(baseObj1, baseObj2, receivingObj);
-        return expect(bakedObj).to.have.all.keys('increaseByOne', 'sum', 'multiply', 'pow', 'enable', 'itemList', '_super');
+        return expect(bakedObj).to.have.all.keys('increaseByOne', 'sum', 'multiply', 'pow', 'enable', 'itemList');
       });
       it('should be able to call the baked methods', function() {
         var bakedObj;
@@ -152,6 +152,12 @@
         expect(bakedObj.sum).to.not.exist;
         expect(bakedObj.multiply).to.not.exist;
         return expect(bakedObj.increaseByOne).to.exist;
+      });
+      it('should have the _.super property hidden and frozen (non: enumerable, configurable, writable)', function() {
+        var bakedObj;
+        bakedObj = bakeIn(baseObj1, receivingObj);
+        expect(bakedObj.propertyIsEnumerable('_super')).to.be["false"];
+        return expect(Object.isFrozen(bakedObj._super)).to.be["true"];
       });
       describe('When an attribute(Only methods) is marked with the ~ flag in the filter array, e.g: ["~methodName"]', function() {
         it('should bind the method context to the original obj (parent) instead of the target obj', function() {

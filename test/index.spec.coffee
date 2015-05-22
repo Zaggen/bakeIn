@@ -52,7 +52,7 @@ describe 'BakeIn Module to extend an object, with multiple objects', ->
 
     it 'should have all methods from the baked baseObjects and its original attrs', ->
       bakedObj = bakeIn(baseObj1, baseObj2, receivingObj)
-      expect(bakedObj).to.have.all.keys('increaseByOne', 'sum', 'multiply', 'pow', 'enable', 'itemList', '_super')
+      expect(bakedObj).to.have.all.keys('increaseByOne', 'sum', 'multiply', 'pow', 'enable', 'itemList')
 
     it 'should be able to call the baked methods', ->
       bakedObj = bakeIn(baseObj1, baseObj2, receivingObj)
@@ -106,6 +106,11 @@ describe 'BakeIn Module to extend an object, with multiple objects', ->
       expect(bakedObj.multiply).to.not.exist
       expect(bakedObj.increaseByOne).to.exist
 
+    it 'should have the _.super property hidden and frozen (non: enumerable, configurable, writable)', ->
+      bakedObj = bakeIn(baseObj1, receivingObj)
+      expect(bakedObj.propertyIsEnumerable('_super')).to.be.false
+      expect(Object.isFrozen(bakedObj._super)).to.be.true
+
     describe 'When an attribute(Only methods) is marked with the ~ flag in the filter array, e.g: ["~methodName"]', ->
       it 'should bind the method context to the original obj (parent) instead of the target obj', ->
         bakedObj = bakeIn(baseObj4, ['~publicMethod'], {})
@@ -141,3 +146,4 @@ describe 'BakeIn Module to extend an object, with multiple objects', ->
         expect(bakedObj.new).to.exist
         bakedInstance = bakedObj.new("I'm baked")
         expect(bakedInstance.msg).to.equal("I'm baked")
+
