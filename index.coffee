@@ -33,17 +33,11 @@ bakeInModule =
             else if _.isObject(attr) and key isnt '_super'
               receivingObj[key] = _.merge(receivingObj[key], attr)
 
+    @_freezeAndHideAttr(receivingObj, '_super')
     if receivingObj.hasOwnProperty('constructor')
       receivingObj = @_makeFactoryObj(receivingObj)
     return receivingObj
 
-  _makeFactoryObj: (obj)->
-    {
-      new:(args...)->
-        instance = Object.create(obj)
-        instance.constructor.apply(instance, args)
-        return instance
-    }
   # Filters from the arguments the base objects and the option filter objects
   _filterArgs: (args)->
     @baseObjs = []
@@ -160,5 +154,17 @@ bakeInModule =
         else
           # When no options provided is the same as include all, so we never skip
           return false
+
+  _freezeAndHideAttr: (obj, attributeName)->
+    Object.defineProperty obj, attributeName, {enumerable: false}
+    Object.freeze obj[attributeName]
+
+  _makeFactoryObj: (obj)->
+    {
+    new:(args...)->
+      instance = Object.create(obj)
+      instance.constructor.apply(instance, args)
+      return instance
+    }
 
 module.exports = bakeInModule.bakeIn.bind(bakeInModule)

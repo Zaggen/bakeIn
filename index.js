@@ -51,21 +51,11 @@
           return results;
         };
       })(this));
+      this._freezeAndHideAttr(receivingObj, '_super');
       if (receivingObj.hasOwnProperty('constructor')) {
         receivingObj = this._makeFactoryObj(receivingObj);
       }
       return receivingObj;
-    },
-    _makeFactoryObj: function(obj) {
-      return {
-        "new": function() {
-          var args, instance;
-          args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-          instance = Object.create(obj);
-          instance.constructor.apply(instance, args);
-          return instance;
-        }
-      };
     },
     _filterArgs: function(args) {
       this.baseObjs = [];
@@ -202,6 +192,23 @@
             return false;
         }
       }
+    },
+    _freezeAndHideAttr: function(obj, attributeName) {
+      Object.defineProperty(obj, attributeName, {
+        enumerable: false
+      });
+      return Object.freeze(obj[attributeName]);
+    },
+    _makeFactoryObj: function(obj) {
+      return {
+        "new": function() {
+          var args, instance;
+          args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+          instance = Object.create(obj);
+          instance.constructor.apply(instance, args);
+          return instance;
+        }
+      };
     }
   };
 
