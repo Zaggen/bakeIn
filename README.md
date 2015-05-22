@@ -12,7 +12,7 @@ bakeIn([baseObjectN], [configN], receivingObj)
 ```
 ## Arguments
 * `baseObjectN` **Object** (Optional) Objects to extend the recievingObj, they will take precedence in reverse order, being the last  one before the receivingObj the one that will take more precedence.
-* `configN` **Array** with flags(`!`, `*`,`~`) and/or attribute names, e.g:
+* `configN` **Array** (Optional) with flags(`!`, `*`,`~`) and/or attribute names, e.g:
   - `['attr1', 'attr2']` Will only include those selected attributes from the corresponding object
   - `['~publicMethod']` Will only include those selected method and it will bind its context to the original baseObject. This is useful, when you have an object with "public" methods that make use of internal "private" methods, and you don't want to inherit those, this way this inherited method will be able to call all the needed attributes and methods from its original obj. Use this sparringly since it will bite you if you try to use it incorrectly. Just remeber that the inerhit method will not have acces to any of your attributes/methods defined/inherited in the recievingObj. Also, this flag is ignored for non function attributes, and when the exclude flag is setted, since we can't bind an excluded method...
   - `['!', 'privateAttr']` Will exclude the selected attr, and include the rest
