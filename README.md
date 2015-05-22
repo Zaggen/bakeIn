@@ -1,9 +1,9 @@
 # BakeIn
-A helper function to use object composition, so it allows to extend an object with other objects, pretty much like  lodash `extend`, which this module uses internally.
-With a couple of differences, the order of arguments is reversed, this allows a coffeescript class-like workflow when working with objects, so we can create the target obj as the last argument and it will read better this way. The main differences thought, are that we can choose which attributes we extend from all of the baseObjects/mixins, and get a factory function when we specify a constructor for the receiving object.
+## A Multiple composable inheritance module for js
+BakeIn is a helper function to use object composition, so it allows an object to be extended/inherit from other objects properties (own properties), pretty much like  lodash `extend`.With a couple of differences, that makes a huge difference in power, flexibility and clarity. First the order of arguments is reversed, this allows a CoffeeScript *Class-like* workflow when working with objects, so the last argument will be our targetObj where we define our new properties and methods. The main differences thought, are that we can choose which attributes we extend from all of the baseObjects/mixins, and that the `bakeIn` fn can return an object with factory function when we specify a constructor for the receiving object.
 
 ##Installation
-  npm install bake-in --save
+`npm install bake-in --save`
 
 ## Usage
 Returns the receivingObj/TargetObj
@@ -11,14 +11,14 @@ Returns the receivingObj/TargetObj
 bakeIn([baseObjectN], [configN], receivingObj)
 ```
 ## Arguments
-* `baseObjectN` Object (Optional) Objects to extend the recievingObj, they will take precedence in reverse order, being the last  one before the receivingObj the one that will take more precedence.
-* `configN` Array with flags(`!`, `*`,`~`) and/or attribute names, e.g:
+* `baseObjectN` **Object** (Optional) Objects to extend the recievingObj, they will take precedence in reverse order, being the last  one before the receivingObj the one that will take more precedence.
+* `configN` **Array** with flags(`!`, `*`,`~`) and/or attribute names, e.g:
   - `['attr1', 'attr2']` Will only include those selected attributes from the corresponding object
   - `['~publicMethod']` Will only include those selected method and it will bind its context to the original baseObject. This is useful, when you have an object with "public" methods that make use of internal "private" methods, and you don't want to inherit those, this way this inherited method will be able to call all the needed attributes and methods from its original obj. Use this sparringly since it will bite you if you try to use it incorrectly. Just remeber that the inerhit method will not have acces to any of your attributes/methods defined/inherited in the recievingObj. Also, this flag is ignored for non function attributes, and when the exclude flag is setted, since we can't bind an excluded method...
   - `['!', 'privateAttr']` Will exclude the selected attr, and include the rest
   - `['!']` Will exclude all attributes. Only usefull for debugging purposes
   - `['*']` Will include all attributes. By default if you dont't provide a confArray there is no need to explicitly say to include all attributes, but if you use at least one confArray for any of your objects, you must use them for the rest, this is to avoid ambiguity, so use the `*` in those cases.
-* `receivingObj` Object The object to extend.
+* `receivingObj` **Object** The object to extend.
 
 ## Examples
 ```coffeescript
@@ -41,7 +41,7 @@ sprite =
   update: ->
     # Updates sprite
     
-gameCharacter = bakeIn movable, sprite, hardObj
+gameCharacter = bakeIn movable, sprite, hardObj,
   _exp: 0
   lvlUp: (newExp)->
     @_increaseExp(newExp) # Private Method Call
@@ -73,6 +73,20 @@ zaggen.sayMsg() # Outputs "Zaggen is ready to kill some goblins!"
 zaggen.lvlUp(100) #Increases exp, and if enough it'll lvl up the player
 zaggen.move(15, 40, 10) # Moves the character to position (15,40) in 10 miliseconds
 ```
+### Optional syntax usage for the last example
+This order allows to to be more explicit about what are you inheriting and from which obj, but you have to use `()` in CF, you would have to use them in js though, so is up to you. It only matters that you provide an equal number of objects and optionsArrays (Or none) and each one corresponds to the other.
+```coffeescript
+Player = bakeIn(
+  gameCharacter, ['~lvlUp']
+  killable, ['kill'],
+  constructor: (playerName)->
+    # some code
+  sayMsg: ->
+    # some code
+  kill: ->
+    # some code
+)
+```
 ## Features
 * Extend any object with one or many other objects/mixins
 * You have composite options, meaning you can pick which attributes you inherit and even set the context of methods to their original objects.
@@ -83,10 +97,12 @@ zaggen.move(15, 40, 10) # Moves the character to position (15,40) in 10 miliseco
  > "Favor 'object composition' over 'class inheritance'."
  -GoF
  
-Inheritance is weird in javascript(es5), not really in coffeescript, and i must say i love the cs class syntax, but sometimes single inheritance just doesn't make sense when you want to inherit from multiple functionality from different objects, and if you do that you will end up with a lot of redundancy classes, but hey we can do that via mixins by calling something like `_.extend` after (at the bottom) the constructor/class definition, but to me is better to have the parent objs at top. Now this module is really flexible, because you can choose/compose the attributes/traits that you want to inherit, this is just not possible with the native behavior of both js or cs, or even _.extend or many of the tools to extend an object out there.
+Traditional object composition is done by creating instances of the objects/classes that have the functionality we want in a particular class/obj, but i think we can get the benefits from object composition in a different way in js (A much better way) with multiple inheritance, something that i call *Multiple composable inheritance*.
+Lets face it, Inheritance is weird and verbose in javascript(es5) when using constructors, not really in coffeescript, and i must say i love the cs class syntax, but sometimes single inheritance just doesn't make sense when you want to inherit from multiple functionality from different objects, and if you do that you will end up with a lot of redundancy classes and a weird inheritance chain, but hey we can do that via mixins by calling something like `_.extend` after (at the bottom) the constructor/class definition, but to me is better to have the objects from which we inherit at top but using regular extend fns we can't, not at least until es7 decorators maybe?. 
+Now this module is really flexible, because you can choose/compose the attributes/traits that you want to inherit, this is just not possible with the native behavior of both js or cs, or even _.extend or many of the tools to extend an object out there.
 
-###caveat
-We can only inherit from Objects not classes/constructors ... yet
+###Caveat
+We can only inherit from Objects not classes/constructors ... yet (Not sure if is worth it)
 
 **Note:** Even though the module is called `bakeIn`, name it whatever you like, `compose`, `extend`, `mixIn`, etc.
 
