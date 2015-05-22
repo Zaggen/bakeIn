@@ -1,6 +1,6 @@
 # BakeIn
 ## A Multiple composable inheritance module for js
-BakeIn is a helper function to use object composition, so it allows an object to be extended/inherit from other objects properties (own properties), pretty much like  lodash `extend`.With a couple of differences, that makes a huge difference in power, flexibility and clarity. First the order of arguments is reversed, this allows a CoffeeScript *Class-like* workflow when working with objects, so the last argument will be our targetObj where we define our new properties and methods. Second we can choose which attributes we inherit from all of the baseObjects/mixins, and lastly the `bakeIn` fn can return an object with factory function when we specify a constructor for the receiving object.
+BakeIn is a helper function to use object composition, so it allows an object to be extended/inherit from other objects properties (own properties), pretty much like  lodash `extend`.With a couple of differences, that makes a huge impact in power, flexibility and clarity. First the order of arguments is reversed, this allows a CoffeeScript *Class-like* workflow when working with objects, so the last argument will be our targetObj where we define our new properties and methods. Second we can choose which attributes we inherit from all of the baseObjects/mixins, and lastly the `bakeIn` fn can return an object with factory function when we specify a constructor for the receiving object.
 
 ## Installation
 `npm install bake-in --save`
