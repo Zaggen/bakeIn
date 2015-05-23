@@ -8,7 +8,7 @@
 
   bakeInModule = {
     bakeIn: function() {
-      var args, receivingObj, receivingObjAttrs;
+      var args, attr, baseObj, fn, i, j, key, len, receivingObj, receivingObjAttrs, ref;
       args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
       receivingObj = args.pop();
       receivingObj._super = {};
@@ -16,46 +16,50 @@
         return true;
       });
       this._filterArgs(args);
-      _.each(this.baseObjs, (function(_this) {
-        return function(baseObj, i) {
-          var attr, fn, key, results;
-          _this._filter.set(_this.options[i]);
-          results = [];
-          for (key in baseObj) {
-            if (!hasProp.call(baseObj, key)) continue;
-            attr = baseObj[key];
-            if (!_this._filter.skip(key)) {
-              if (_.isFunction(attr)) {
-                fn = attr;
-                fn = _this.useParentContext[key] ? fn.bind(baseObj) : fn;
-                if (receivingObjAttrs[key] != null) {
-                  results.push(receivingObj._super[key] = fn);
+      ref = this.baseObjs;
+      for (i = j = 0, len = ref.length; j < len; i = ++j) {
+        baseObj = ref[i];
+        this._filter.set(this.options[i]);
+        for (key in baseObj) {
+          if (!hasProp.call(baseObj, key)) continue;
+          attr = baseObj[key];
+          if (!this._filter.skip(key)) {
+            if (_.isFunction(attr)) {
+              fn = attr;
+              fn = this.useParentContext.hasOwnProperty(key) ? fn.bind(baseObj) : fn;
+              if (receivingObjAttrs.hasOwnProperty(key)) {
+                if (key === 'constructor') {
+                  this._setSuperConstructor(receivingObj, fn);
                 } else {
-                  results.push(receivingObj[key] = receivingObj._super[key] = fn);
+                  receivingObj._super[key] = fn;
                 }
               } else {
-                if (!receivingObjAttrs[key]) {
-                  results.push(receivingObj[key] = _.cloneDeep(attr));
-                } else if (_.isArray(attr)) {
-                  results.push(receivingObj[key] = receivingObj[key].concat(attr));
-                } else if (_.isObject(attr) && key !== '_super') {
-                  results.push(receivingObj[key] = _.merge(receivingObj[key], attr));
-                } else {
-                  results.push(void 0);
-                }
+                receivingObj[key] = receivingObj._super[key] = fn;
               }
             } else {
-              results.push(void 0);
+              if (!receivingObjAttrs.hasOwnProperty(key)) {
+                receivingObj[key] = _.cloneDeep(attr);
+              } else if (_.isArray(attr)) {
+                receivingObj[key] = receivingObj[key].concat(attr);
+              } else if (_.isObject(attr) && key !== '_super') {
+                receivingObj[key] = _.merge(receivingObj[key], attr);
+              }
             }
           }
-          return results;
-        };
-      })(this));
+        }
+      }
       this._freezeAndHideAttr(receivingObj, '_super');
       if (receivingObj.hasOwnProperty('constructor')) {
-        receivingObj = this._makeFactoryObj(receivingObj);
+        receivingObj = this._makeConstructor(receivingObj);
       }
       return receivingObj;
+    },
+    _setSuperConstructor: function(target, constructor) {
+      return target._super.constructor = function() {
+        var superArgs;
+        superArgs = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+        return constructor.apply(superArgs.shift(), superArgs);
+      };
     },
     _filterArgs: function(args) {
       this.baseObjs = [];
@@ -199,16 +203,17 @@
       });
       return Object.freeze(obj[attributeName]);
     },
-    _makeFactoryObj: function(obj) {
-      return {
-        "new": function() {
-          var args, instance;
-          args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-          instance = Object.create(obj);
-          instance.constructor.apply(instance, args);
-          return instance;
-        }
+    _makeConstructor: function(obj) {
+      var fn;
+      fn = function() {
+        var args, originalSuperConstructor;
+        args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+        originalSuperConstructor = this._super.constructor;
+        this._super.constructor = this._super.constructor.bind(this);
+        return obj.constructor.apply(this, args);
       };
+      fn.prototype = obj;
+      return fn;
     }
   };
 

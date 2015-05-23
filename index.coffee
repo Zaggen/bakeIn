@@ -12,21 +12,24 @@ bakeInModule =
     receivingObj._super = {}
     receivingObjAttrs = _.mapValues(receivingObj, (val)-> true)
     @_filterArgs(args)
-    _.each @baseObjs, (baseObj, i)=>
+    for baseObj, i in @baseObjs
       @_filter.set(@options[i])
       for own key, attr of baseObj
         unless @_filter.skip(key)
           if _.isFunction(attr)
             fn = attr
-            fn = if @useParentContext[key] then fn.bind(baseObj) else fn
-            if receivingObjAttrs[key]?
-              receivingObj._super[key] = fn
+            fn = if @useParentContext.hasOwnProperty(key) then fn.bind(baseObj) else fn
+            if receivingObjAttrs.hasOwnProperty(key)
+              if key is 'constructor'
+                @_setSuperConstructor(receivingObj, fn)
+              else
+                receivingObj._super[key] = fn
             else
               receivingObj[key] = receivingObj._super[key] = fn
           else
             # We check if the receiving object already has an attribute with that keyName
             # if none is found or the attr is an array/obj we concat/merge it
-            if not receivingObjAttrs[key]
+            if not receivingObjAttrs.hasOwnProperty(key)
               receivingObj[key] = _.cloneDeep(attr)
             else if _.isArray(attr)
               receivingObj[key] = receivingObj[key].concat(attr)
@@ -35,8 +38,11 @@ bakeInModule =
 
     @_freezeAndHideAttr(receivingObj, '_super')
     if receivingObj.hasOwnProperty('constructor')
-      receivingObj = @_makeFactoryObj(receivingObj)
+      receivingObj = @_makeConstructor(receivingObj)
     return receivingObj
+
+  _setSuperConstructor: (target, constructor)->
+    target._super.constructor = (superArgs...)-> constructor.apply(superArgs.shift(), superArgs)
 
   # Filters from the arguments the base objects and the option filter objects
   _filterArgs: (args)->
@@ -159,12 +165,12 @@ bakeInModule =
     Object.defineProperty obj, attributeName, {enumerable: false}
     Object.freeze obj[attributeName]
 
-  _makeFactoryObj: (obj)->
-    {
-    new:(args...)->
-      instance = Object.create(obj)
-      instance.constructor.apply(instance, args)
-      return instance
-    }
+  _makeConstructor: (obj)->
+    fn = (args...)->
+      originalSuperConstructor = @_super.constructor
+      @_super.constructor = @_super.constructor.bind(@)
+      obj.constructor.apply(this, args)
+    fn.prototype = obj
+    return fn
 
 module.exports = bakeInModule.bakeIn.bind(bakeInModule)
