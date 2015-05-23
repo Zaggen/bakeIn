@@ -200,16 +200,15 @@
           return expect(bakedObj.multiply(2, 2)).to.equal(8);
         });
       });
-      return describe('When the targetObj(Last obj argument) defines a constructor method', function() {
-        return it('should be an object with a factory method called "new", that will call the defined constructor function', function() {
-          var bakedInstance, bakedObj;
-          bakedObj = bakeIn(baseObj1, {
+      return describe('When any of the parentObjects defines a constructor method', function() {
+        return it('should be a constructor function that calls the constructor defined in the receiving obj ', function() {
+          var BakedObj, bakedInstance;
+          BakedObj = bakeIn({
             constructor: function(msg) {
               return this.msg = msg;
             }
-          });
-          expect(bakedObj["new"]).to.exist;
-          bakedInstance = bakedObj["new"]("I'm baked");
+          }, {});
+          bakedInstance = new BakedObj("I'm baked");
           return expect(bakedInstance.msg).to.equal("I'm baked");
         });
       });

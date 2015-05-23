@@ -140,10 +140,8 @@ describe 'BakeIn Module to extend an object, with multiple objects', ->
 
         expect(bakedObj.multiply(2, 2)).to.equal(8)
 
-    describe 'When the targetObj(Last obj argument) defines a constructor method', ->
-      it 'should be an object with a factory method called "new", that will call the defined constructor function', ->
-        bakedObj = bakeIn(baseObj1, { constructor: (msg)-> @msg = msg})
-        expect(bakedObj.new).to.exist
-        bakedInstance = bakedObj.new("I'm baked")
+    describe 'When any of the parentObjects defines a constructor method', ->
+      it 'should be a constructor function that calls the constructor defined in the receiving obj ', ->
+        BakedObj = bakeIn({ constructor: (msg)-> @msg = msg}, {})
+        bakedInstance = new BakedObj("I'm baked")
         expect(bakedInstance.msg).to.equal("I'm baked")
-
