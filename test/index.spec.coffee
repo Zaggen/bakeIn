@@ -142,6 +142,6 @@ describe 'BakeIn Module to extend an object, with multiple objects', ->
 
     describe 'When any of the parentObjects defines a constructor method', ->
       it 'should be a constructor function that calls the constructor defined in the receiving obj ', ->
-        BakedObj = bakeIn({ constructor: (msg)-> @msg = msg}, {})
+        BakedObj = bakeIn({constructor: (msg)-> @msg = msg}, {constructor: -> @_super.constructor(this, "I'm baked")})
         bakedInstance = new BakedObj("I'm baked")
         expect(bakedInstance.msg).to.equal("I'm baked")

@@ -1,6 +1,6 @@
 {
   "name": "bake-in",
-  "version": "0.5.3",
+  "version": "0.6.0",
   "description": "A helper function, to extend objects with other objects with the ability to pick/omit attributes from them, and receive an object with factory method when a constructor method is provided in the receiving object.",
   "main": "index.js",
   "scripts": {

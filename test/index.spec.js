@@ -207,7 +207,11 @@
             constructor: function(msg) {
               return this.msg = msg;
             }
-          }, {});
+          }, {
+            constructor: function() {
+              return this._super.constructor(this, "I'm baked");
+            }
+          });
           bakedInstance = new BakedObj("I'm baked");
           return expect(bakedInstance.msg).to.equal("I'm baked");
         });
