@@ -1,6 +1,7 @@
 # BakeIn
+**This module is in active development, and still in beta, do not use in production.... yet**
 ## A Multiple composable inheritance module for js
-BakeIn is a helper function to use object composition, so it allows an object to be extended/inherit from other objects properties (own properties), pretty much like  lodash `extend`.With a couple of differences, that makes a huge impact in power, flexibility and clarity. First the order of arguments is reversed, this allows a CoffeeScript *Class-like* workflow when working with objects, so the last argument will be our targetObj where we define our new properties and methods. Second we can choose which attributes we inherit from all of the baseObjects/mixins, and lastly the `bakeIn` fn can return an object with factory function when we specify a constructor for the receiving object.
+BakeIn is a helper function to use object composition, so it allows an object to be extended/inherit from other objects properties (own properties), pretty much like  lodash `extend`.With a couple of differences, that makes a huge impact in power, flexibility and clarity. First the order of arguments is reversed, this allows a CoffeeScript *Class-like* workflow when working with objects, so the last argument will be our targetObj where we define our new properties and methods. Second we can choose which attributes we inherit from all of the baseObjects/mixins, and lastly the `bakeIn` fn can return a constructor function when we specify a constructor in any of the objects passed to the function, though ideally this constructor should be defined in the receiving obj.
 
 ## Installation
 `npm install bake-in --save`
@@ -58,8 +59,9 @@ killable =
 Player = bakeIn gameCharacter, killable
   ['~lvlUp'],
   ['kill'],
-  # If you add a constructor method here, bakeIn will return an object with a "new" factory method,
-  # that will create instances and call that constructor each time is called.
+  # If you add a constructor method here, bakeIn will return constructor function.
+  # If any other object has a constructor, it'll be saved in the @_super obj (only the last one is saved) and you
+  # can called just like any other super method, but you must provide the context as its first argument.
   constructor: (playerName)->
     @msg = "#{playerName} is ready to kill some goblins!"
   sayMsg: ->
@@ -68,7 +70,7 @@ Player = bakeIn gameCharacter, killable
     @_super.kill()
     console.log 'Game Over'
   
-zaggen = Player.new('Zaggen')
+zaggen = new Player('Zaggen')
 zaggen.sayMsg() # Outputs "Zaggen is ready to kill some goblins!"
 zaggen.lvlUp(100) #Increases exp, and if enough it'll lvl up the player
 zaggen.move(15, 40, 10) # Moves the character to position (15,40) in 10 milliseconds
@@ -90,8 +92,8 @@ Player = bakeIn(
 ## Features
 * Extend any object with one or many other objects/mixins
 * You have composite options, meaning you can pick which attributes you inherit and even set the context of methods to their original objects.
-* A `_super` object is created when extending the receivingObj, it will contain all of the inherited methods into it. This is useful when you want to override an inherited parent method but you still want to use the original functionality. 
-* If you provide a constructor in the receivingObj, you will get a new object with a `new` method on it, which will be a factory function, to create instances based on the **baked** receivingObj, via `.new()`. Internally it will call your constructor, and create the instance object via `Object.create()` so all attributes will be added to the newly generated object `prototype`.
+* A `_super` object is created when extending the receivingObj, it will contain all of the inherited methods into it. This is useful when you want to override an inherited parent method but you still want to use the original functionality.
+* If you provide a constructor in the receivingObj, you will get a constructor function.
 
 ## Why bother?
  > "Favor 'object composition' over 'class inheritance'."
@@ -102,7 +104,7 @@ Lets face it, Inheritance is weird and verbose in javascript(es5) when using con
 Now this module is really flexible, because you can choose/compose the attributes/traits that you want to inherit, this is just not possible with the native behavior of both js or cs, or even _.extend or many of the tools to extend an object out there.
 
 ### Caveat
-We can only inherit from Objects not classes/constructors ... yet (Not sure if is worth it)
+We can only inherit from Objects not classes/constructors ... yet
 
 **Note:** Even though the module is called `bakeIn`, name it whatever you like, `compose`, `extend`, `mixIn`, etc.
 
@@ -152,6 +154,10 @@ FooController =  extend BaseController
   bar: (req, res)->
     res.json("action": "bar")
 ```
+## ChangeLog
+* 5/23/2015 - Changed the behavior when a constructor is provided. Now instead of getting an object with a factory
+ method (called new), we are returning a constructor, i think this is a more standard way to instantiate objects,
+ and it performs way better.
 
 ## Bugs, questions, ideas?
 Hell, yeah, just open an issue and i'll try to answer ASAP. I'll appreciate any bug report with a propper way to reproduce it.
