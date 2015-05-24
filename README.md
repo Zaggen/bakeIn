@@ -11,6 +11,21 @@ Returns the receivingObj/TargetObj
 ```coffeescript
 bakeIn([baseObjectN], [configN], receivingObj)
 ```
+#### Usage with multiple inheritance and defined constructor
+You can inherit from multiple "Clases" or objects, or a mixture of both. 
+```coffeescript
+Admin = bakeIn(
+  Account, ['logIn', 'logOut'],
+  User, ['*'], 
+  constructor: (@name)->
+    @privileges = 'all'
+  deleteUsers: ->
+    # Some Code
+  modifyUsers: ->
+    # Some Code
+)
+zaggen = new Admin('zaggen')
+```
 ## Arguments
 * `baseObjectN` **Object** (Optional) Objects to extend the receivingObj, they will take precedence in reverse order, being the last  one before the receivingObj the one that will take more precedence.
 * `configN` **Array** (Optional) with flags(`!`, `*`,`~`) and/or attribute names, e.g:
@@ -100,11 +115,11 @@ Player = bakeIn(
  -GoF
  
 Traditional object composition is done by creating instances of the classes that have the functionality we want in a particular class/obj, but i think we can get the benefits from object composition in a different way in js (A much better way) with multiple inheritance, something that i call *Multiple composable inheritance*.
-Lets face it, Inheritance is weird and verbose in javascript(es5) when using constructors, not really in coffeescript, and i must say i love the CoffeeScript class syntax, but sometimes single inheritance just doesn't make sense when you want to inherit multiple functionality from different objects that may not have a direct relationship, so actually do that you end up with a lot of redundancy classes and a weird inheritance chain, but hey we can do that via mixins by calling something like `_.extend` after (at the bottom) the constructor/class definition, but to me is better to have the objects from which we inherit at top but using regular extend fns we can't, not at least until es7 decorators maybe?. 
+Lets face it, Inheritance is weird and verbose in javascript(es5) when using constructors, not really in coffeescript, and i must say i love the CoffeeScript class syntax, but sometimes single inheritance just doesn't make sense when you want to inherit multiple functionality from different objects that may not have a direct relationship, so if you actually do that you might end up with a lot of redundancy classes and a weird inheritance chain, but hey we can do that via mixins by calling something like `_.extend` after (at the bottom) the constructor/class definition, but to me is better to have the objects from which we inherit at top but using regular extend fns we can't, not at least until es7 decorators maybe?. 
 Now this module is really flexible, because you can choose/compose the attributes/traits that you want to inherit, this is just not possible with the native behavior of both js or cs, or even _.extend or many of the tools to extend an object out there.
 
 ### Caveat
-We can only inherit from Objects not classes/constructors ... yet
+We can only call via _super the constructor defined last on any obj/class before the receiving obj. At least for now.
 
 **Note:** Even though the module is called `bakeIn`, name it whatever you like, `compose`, `extend`, `mixIn`, etc.
 
@@ -155,6 +170,7 @@ FooController =  extend BaseController
     res.json("action": "bar")
 ```
 ## ChangeLog
+* 5/24/2015 - Now you can inherit from "classes" (constructor functions, cs/es6 classes, or bakeIn Clasess)
 * 5/23/2015 - Changed the behavior when a constructor is provided. Now instead of getting an object with a factory
  method (called new), we are returning a constructor, i think this is a more standard way to instantiate objects,
  and it performs way better.
