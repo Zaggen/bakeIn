@@ -96,7 +96,7 @@
         expect(bakedObj.multiply(4, 2)).to.equal(8);
         return expect(bakedObj.pow(2, 3)).to.equal(9);
       });
-      it('should include(cloned) attributes from the baked objects', function() {
+      it('should include(clone) attributes from the baked objects', function() {
         var bakedObj;
         bakedObj = bakeIn(objWithAttrs, receivingObj);
         expect(bakedObj.enable).to.exist;
@@ -158,6 +158,38 @@
         bakedObj = bakeIn(baseObj1, receivingObj);
         expect(bakedObj.propertyIsEnumerable('_super')).to.be["false"];
         return expect(Object.isFrozen(bakedObj._super)).to.be["true"];
+      });
+      it('should include attributes from constructor functions/classes prototypes', function() {
+        var Parent, bakedObj;
+        Parent = (function() {
+          function Parent() {}
+
+          Parent.prototype.someMethod = function() {
+            return 'x';
+          };
+
+          return Parent;
+
+        })();
+        bakedObj = bakeIn(Parent, ['!', 'constructor'], receivingObj);
+        expect(bakedObj.someMethod).to.exist;
+        return expect(bakedObj.someMethod()).to.equal('x');
+      });
+      it('should include static attributes (classAttributes) from constructor functions/classes', function() {
+        var Parent, bakedObj;
+        Parent = (function() {
+          function Parent() {}
+
+          Parent.staticMethod = function() {
+            return 'y';
+          };
+
+          return Parent;
+
+        })();
+        bakedObj = bakeIn(Parent, ['!', 'constructor'], receivingObj);
+        expect(bakedObj.staticMethod).to.exist;
+        return expect(bakedObj.staticMethod()).to.equal('y');
       });
       describe('When an attribute(Only methods) is marked with the ~ flag in the filter array, e.g: ["~methodName"]', function() {
         it('should bind the method context to the original obj (parent) instead of the target obj', function() {

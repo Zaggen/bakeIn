@@ -61,7 +61,7 @@ describe 'BakeIn Module to extend an object, with multiple objects', ->
       expect(bakedObj.multiply(4, 2)).to.equal(8)
       expect(bakedObj.pow(2, 3)).to.equal(9)
 
-    it 'should include(cloned) attributes from the baked objects', ->
+    it 'should include(clone) attributes from the baked objects', ->
       bakedObj = bakeIn(objWithAttrs, receivingObj)
       expect(bakedObj.enable).to.exist
       expect(bakedObj.preferences.fullScreen).to.exist.and.to.be.true
@@ -69,6 +69,7 @@ describe 'BakeIn Module to extend an object, with multiple objects', ->
       expect(bakedObj.preferences.fullScreen).to.exist
       # Lets reset objWithAttrs
       objWithAttrs.preferences = {fullScreen: true}
+
 
     it 'should not clone an attribute from a base object if the receiving obj has a key with the same name', ->
       bakedObj = bakeIn(objWithAttrs, receivingObj)
@@ -110,6 +111,23 @@ describe 'BakeIn Module to extend an object, with multiple objects', ->
       bakedObj = bakeIn(baseObj1, receivingObj)
       expect(bakedObj.propertyIsEnumerable('_super')).to.be.false
       expect(Object.isFrozen(bakedObj._super)).to.be.true
+
+
+    it 'should include attributes from constructor functions/classes prototypes', ->
+      class Parent
+        someMethod: -> 'x'
+
+      bakedObj = bakeIn(Parent, ['!', 'constructor'], receivingObj)
+      expect(bakedObj.someMethod).to.exist
+      expect(bakedObj.someMethod()).to.equal('x')
+
+    it 'should include static attributes (classAttributes) from constructor functions/classes', ->
+      class Parent
+        @staticMethod: -> 'y'
+
+      bakedObj = bakeIn(Parent, ['!', 'constructor'], receivingObj)
+      expect(bakedObj.staticMethod).to.exist
+      expect(bakedObj.staticMethod()).to.equal('y')
 
     describe 'When an attribute(Only methods) is marked with the ~ flag in the filter array, e.g: ["~methodName"]', ->
       it 'should bind the method context to the original obj (parent) instead of the target obj', ->
