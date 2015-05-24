@@ -67,10 +67,16 @@
       this.useParentContext = {};
       return _.each(args, (function(_this) {
         return function(arg) {
+          var fn, obj;
           if (!_.isObject(arg)) {
-            throw new Error('BakeIn only accepts objects/arrays (As bakeIn {} and options [])');
+            throw new Error('BakeIn only accepts objects/arrays/fns e.g (fn/{} parent objects/classes or an [] with options)');
           } else if (_this._isOptionArr(arg)) {
             return _this.options.push(_this._makeOptionsObj(arg));
+          } else if (_.isFunction(arg)) {
+            fn = arg;
+            obj = _.merge({}, fn, fn.prototype);
+            obj.constructor = fn;
+            return _this.baseObjs.push(obj);
           } else {
             return _this.baseObjs.push(arg);
           }

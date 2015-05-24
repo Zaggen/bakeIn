@@ -10,7 +10,8 @@ bakeInModule =
   bakeIn: (args...)->
     receivingObj = args.pop()
     receivingObj._super = {}
-    receivingObjAttrs = _.mapValues(receivingObj, (val)-> true)
+    receivingObjAttrs = _.mapValues(receivingObj, (val)-> true) # Creates an obj, with the receivingObj keys, and a boolean
+    # Filter(separates) parentObjects/classes from configurations arrays
     @_filterArgs(args)
     for baseObj, i in @baseObjs
       @_filter.set(@options[i])
@@ -44,17 +45,27 @@ bakeInModule =
   _setSuperConstructor: (target, constructor)->
     target._super.constructor = (superArgs...)-> constructor.apply(superArgs.shift(), superArgs)
 
-  # Filters from the arguments the base objects and the option filter objects
+  # Filters from the arguments the base objects/classes and the option filter arrays
   _filterArgs: (args)->
     @baseObjs = []
     @options = []
     @useParentContext = {}
     _.each args, (arg)=>
       if not _.isObject(arg)
-        throw new Error 'BakeIn only accepts objects/arrays (As bakeIn {} and options [])'
+        throw new Error 'BakeIn only accepts objects/arrays/fns e.g (fn/{} parent objects/classes or an [] with options)'
       else if @_isOptionArr(arg)
         @options.push(@_makeOptionsObj(arg))
+      else if _.isFunction(arg)
+        # When a fn is passed, we assume is a constructor, so we copy the properties in its prototype,
+        # as well as any attribute that might be attached to the constructor itself(not usual, but lets be safe)
+        # to an empty object. Then we add a constructor property to this new obj, so inheriting from "classes", will
+        # always result in objects with constructors as one of their keys, unless is specifically excluded by the caller.
+        fn = arg
+        obj = _.merge({}, fn, fn::)
+        obj.constructor = fn
+        @baseObjs.push(obj)
       else
+        # If it is a simple object we just add it to our array
         @baseObjs.push(arg)
 
 
