@@ -1,7 +1,7 @@
 {
   "name": "bake-in",
-  "version": "0.6.0",
-  "description": "A helper function, to extend objects with other objects with the ability to pick/omit attributes from them, and receive an object with factory method when a constructor method is provided in the receiving object.",
+  "version": "0.6.1",
+  "description": "A Flexible inheritance module, where you can pick/omit attributes from the parents.",
   "main": "index.js",
   "scripts": {
     "test": "mocha test/*.spec.coffee"
@@ -16,7 +16,8 @@
     "extend",
     "multiple inheritance",
     "sails.js",
-    "object composition"
+    "object composition",
+    "composable"
   ],
   "author": "Zaggen/Lu Roman <xpynesoul@gmail.com> (https://github.com/Zaggen)",
   "license": "ISC",
