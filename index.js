@@ -16,6 +16,7 @@
         return true;
       });
       this._filterArgs(args);
+      this.staticMethods = {};
       ref = this.baseObjs;
       for (i = j = 0, len = ref.length; j < len; i = ++j) {
         baseObj = ref[i];
@@ -212,10 +213,8 @@
     _makeConstructor: function(obj) {
       var fn;
       fn = function() {
-        var args, originalSuperConstructor;
+        var args;
         args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-        originalSuperConstructor = this._super.constructor;
-        this._super.constructor = this._super.constructor.bind(this);
         return obj.constructor.apply(this, args);
       };
       fn.prototype = obj;

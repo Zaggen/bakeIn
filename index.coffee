@@ -13,6 +13,7 @@ bakeInModule =
     receivingObjAttrs = _.mapValues(receivingObj, (val)-> true) # Creates an obj, with the receivingObj keys, and a boolean
     # Filter(separates) parentObjects/classes from configurations arrays
     @_filterArgs(args)
+    @staticMethods = {}
     for baseObj, i in @baseObjs
       @_filter.set(@options[i])
       for own key, attr of baseObj
@@ -177,11 +178,13 @@ bakeInModule =
     Object.freeze obj[attributeName]
 
   _makeConstructor: (obj)->
+    #console.log 'Making constructor'
     fn = (args...)->
-      originalSuperConstructor = @_super.constructor
-      @_super.constructor = @_super.constructor.bind(@)
       obj.constructor.apply(this, args)
     fn.prototype = obj
+    #fn.prototype.constructor = fn # This creates a circular reference, should check soon
+
+    #console.log 'fn', fn.prototype
     return fn
 
 module.exports = bakeInModule.bakeIn.bind(bakeInModule)
