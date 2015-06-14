@@ -41,14 +41,12 @@ describe 'BakeIn Module to extend an object, with multiple objects', ->
         fullScreen: true
 
   describe 'The baked object', ->
-
     beforeEach ->
       receivingObj =
-        increaseByOne: (n)->
-          @sum(n, 1)
-
+        increaseByOne: (n)->  @sum(n, 1)
         enable: false
         itemList: ['item1']
+
 
     it 'should have all methods from the baked baseObjects and its original attrs', ->
       bakedObj = bakeIn(baseObj1, baseObj2, receivingObj)
@@ -121,13 +119,35 @@ describe 'BakeIn Module to extend an object, with multiple objects', ->
       expect(bakedObj.someMethod).to.exist
       expect(bakedObj.someMethod()).to.equal('x')
 
-    it 'should include static attributes (classAttributes) from constructor functions/classes', ->
+    it 'should include static attributes (classAttributes) from constructor functions/classes, to the resulting constructor, when one is defined', ->
       class Parent
         @staticMethod: -> 'y'
 
-      bakedObj = bakeIn(Parent, ['!', 'constructor'], receivingObj)
+      BakedObj = bakeIn(Parent, {constructor:-> true})
+      instanceOfBaked = new BakedObj
+      expect(instanceOfBaked.staticMethod).to.exist
+      expect(instanceOfBaked.staticMethod()).to.equal('y')
+
+    it 'should not include static attributes (classAttributes) from constructor functions/classes, when a constructor is not defined', ->
+      class Parent
+        @staticMethod: -> 'y'
+
+      bakedObj = bakeIn(Parent, ['!', 'constructor'], {})
       expect(bakedObj.staticMethod).to.exist
       expect(bakedObj.staticMethod()).to.equal('y')
+
+    it 'should be able to call truly private variables, when defined using and IIFE', ->
+      bakedObj = bakeIn do ->
+        # Private attributes
+        _privateVar = 5
+        # Public attributes
+        set: (val)-> _privateVar = val
+        get: -> _privateVar
+
+      expect(bakedObj.privateVar).to.not.exist
+      expect(bakedObj.get()).to.equal(5)
+      bakedObj.set(4)
+      expect(bakedObj.get()).to.equal(4)
 
     describe 'When an attribute(Only methods) is marked with the ~ flag in the filter array, e.g: ["~methodName"]', ->
       it 'should bind the method context to the original obj (parent) instead of the target obj', ->

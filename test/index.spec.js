@@ -175,7 +175,28 @@
         expect(bakedObj.someMethod).to.exist;
         return expect(bakedObj.someMethod()).to.equal('x');
       });
-      it('should include static attributes (classAttributes) from constructor functions/classes', function() {
+      it('should include static attributes (classAttributes) from constructor functions/classes, to the resulting constructor, when one is defined', function() {
+        var BakedObj, Parent, instanceOfBaked;
+        Parent = (function() {
+          function Parent() {}
+
+          Parent.staticMethod = function() {
+            return 'y';
+          };
+
+          return Parent;
+
+        })();
+        BakedObj = bakeIn(Parent, {
+          constructor: function() {
+            return true;
+          }
+        });
+        instanceOfBaked = new BakedObj;
+        expect(instanceOfBaked.staticMethod).to.exist;
+        return expect(instanceOfBaked.staticMethod()).to.equal('y');
+      });
+      it('should not include static attributes (classAttributes) from constructor functions/classes, when a constructor is not defined', function() {
         var Parent, bakedObj;
         Parent = (function() {
           function Parent() {}
@@ -187,9 +208,28 @@
           return Parent;
 
         })();
-        bakedObj = bakeIn(Parent, ['!', 'constructor'], receivingObj);
+        bakedObj = bakeIn(Parent, ['!', 'constructor'], {});
         expect(bakedObj.staticMethod).to.exist;
         return expect(bakedObj.staticMethod()).to.equal('y');
+      });
+      it('should be able to call truly private variables, when defined using and IIFE', function() {
+        var bakedObj;
+        bakedObj = bakeIn((function() {
+          var _privateVar;
+          _privateVar = 5;
+          return {
+            set: function(val) {
+              return _privateVar = val;
+            },
+            get: function() {
+              return _privateVar;
+            }
+          };
+        })());
+        expect(bakedObj.privateVar).to.not.exist;
+        expect(bakedObj.get()).to.equal(5);
+        bakedObj.set(4);
+        return expect(bakedObj.get()).to.equal(4);
       });
       describe('When an attribute(Only methods) is marked with the ~ flag in the filter array, e.g: ["~methodName"]', function() {
         it('should bind the method context to the original obj (parent) instead of the target obj', function() {
