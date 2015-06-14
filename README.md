@@ -1,7 +1,7 @@
 # BakeIn
 **This module is in active development, and still in beta, do not use in production.... yet**
 ## A Multiple composable inheritance module for js
-BakeIn is a helper function to use object composition, so it allows an object to be extended/inherit from other objects properties (own properties), pretty much like  lodash `extend`.With a couple of differences, that makes a huge impact in power, flexibility and clarity. First the order of arguments is reversed, this allows a CoffeeScript *Class-like* workflow when working with objects, so the last argument will be our targetObj where we define our new properties and methods. Second we can choose which attributes we inherit from all of the baseObjects/mixins, and lastly the `bakeIn` fn can return a constructor function when we specify a constructor in any of the objects passed to the function, though ideally this constructor should be defined in the receiving obj.
+BakeIn is a allows an object to be extended/inherit from other objects properties (own properties), pretty much like  lodash `extend`.With a couple of differences, that makes a huge impact in power, flexibility and clarity. First the order of arguments is reversed, this allows a CoffeeScript *Class-like* workflow when working with objects, so the last argument will be our targetObj where we define our new properties and methods. Second we can choose which attributes we inherit from all of the baseObjects/mixins, and lastly the `bakeIn` fn can return a constructor function when we specify a constructor in any of the objects passed to the function, though ideally this constructor should be defined in the receiving obj.
 
 ## Installation
 `npm install bake-in --save`
@@ -114,7 +114,7 @@ Player = bakeIn(
  > "Favor 'object composition' over 'class inheritance'."
  -GoF
  
-Traditional object composition is done by creating instances of the classes that have the functionality we want in a particular class/obj, but i think we can get the benefits from object composition in a different way in js (A much better way) with multiple inheritance, something that i call *Multiple composable inheritance*.
+Traditional object composition is done by creating instances of the classes that have the functionality we want in a particular class/obj, and its pretty useful and i think we can get the some of the benefits from object composition and multiple inheritance, something that i call *Multiple composable inheritance*.
 Lets face it, Inheritance is weird and verbose in javascript(es5) when using constructors, not really in coffeescript, and i must say i love the CoffeeScript class syntax, but sometimes single inheritance just doesn't make sense when you want to inherit multiple functionality from different objects that may not have a direct relationship, so if you actually do that you might end up with a lot of redundancy classes and a weird inheritance chain, but hey we can do that via mixins by calling something like `_.extend` after (at the bottom) the constructor/class definition, but to me is better to have the objects from which we inherit at top but using regular extend fns we can't, not at least until es7 decorators maybe?. 
 Now this module is really flexible, because you can choose/compose the attributes/traits that you want to inherit, this is just not possible with the native behavior of both js or cs, or even _.extend or many of the tools to extend an object out there.
 
